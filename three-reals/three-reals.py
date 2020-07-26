@@ -51,13 +51,11 @@ for hand1 in hands:
     print(f"Adding constraint: {constraint}")
     solver.add(constraint)
 
-# Check if a, b, c can be zero
 print(f"===== Solution with any a, b, c =====")
-print_solution(solver)
+print_solution(solver) # sat
 
-# Assert a, b, c are nonzero and check again
 print(f"===== Solution with a, b, c nonzero =====")
 solver.add(a != 0)
 solver.add(b != 0)
 solver.add(c != 0)
-print_solution(solver)
+print_solution(solver) # unsat
