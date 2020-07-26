@@ -1,8 +1,14 @@
 """
 Problem statement:
-    You are given a deck of 30 cards which have the distinct real numbers a, b, or c written on them: ten with a, ten with b, and ten with c. You are told that, for any set of five cards from this deck, it is possible to choose another five cards such that the total sum of all ten cards is zero. Prove that one of a, b, or c must be zero.
+    You are given a deck of 30 cards which have the distinct real
+    numbers a, b, or c written on them: ten with a, ten with b, and
+    ten with c. You are told that, for any set of five cards from
+    this deck, it is possible to choose another five cards such that
+    the total sum of all ten cards is zero. Prove that one of a, b,
+    or c must be zero.
 
-This is a solution using the Z3 Theorem Prover. To run, first install Z3 via `pip3 install z3-solver` or by following the instructions at:
+This is a solution using the Z3 Theorem Prover. To run, first install
+Z3 via `pip3 install z3-solver` or by following the instructions at:
     https://github.com/Z3Prover/z3
 
 Output of `time python3 three-reals.py`:
@@ -36,8 +42,8 @@ solver.add(a != b)
 solver.add(a != c)
 solver.add(b != c)
 
-# For all possible hands of 5 cards, there exists another hand such that
-# the sum of the two hands is zero
+# For all possible hands of 5 cards, there exists another hand such
+# that the sum of the two hands is zero
 hands = list(itertools.combinations_with_replacement((a, b, c), 5))
 for hand1 in hands:
     possible_sums = [sum(hand1) + sum(hand2) for hand2 in hands]
