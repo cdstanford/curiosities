@@ -50,6 +50,8 @@ Time complexity:
     takes time O(log(n)).
 
 External links on the copy-paste problem:
+    https://oeis.org/A178715 (roughly equivalent problem)
+    https://oeis.org/A193286 (assumes that copy deselects the characters)
     https://math.stackexchange.com/questions/483596/least-amount-of-steps-to-get-over-1000/48365
     https://codegolf.stackexchange.com/questions/38410/copy-paste-master
 """
