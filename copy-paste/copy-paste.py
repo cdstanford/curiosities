@@ -3,10 +3,10 @@ What is the optimal way to copy and paste to create a long message of many
 copies of the same character?
 
 Problem statement:
-    Given input a target number t, determine *all* minimum-length sequences
-    of key presses to get a message of *at least* t of the same character
-    in the message buffer, starting from a message buffer of 1 character
-    (not selected) and a clipboard of 0 characters.
+    Given input a target number t, find and return one of the
+    minimum-length sequences of key presses to get a message of *at least*
+    t of the same character in the message buffer, starting from a message
+    buffer of 1 character (not selected) and a clipboard of 0 characters.
 
     The solution time complexity should be as low as possible.
 
@@ -28,15 +28,22 @@ Problem statement:
     than a single character).
 
     Example input: 8
-    Expected output:
+    Expected output: one of
         ACVVVACVVV
+        ACVVACVVVV
+        ACVVVVACVV
         ACVVVVVVVV
-    Note that the first produces 9 while the second produces 8, but both have
-    the minimum length of 10 key presses,
-    so both should be returned as valid answers.
+    Note that the first produces 9 while the others produce 8, but all have
+    the minimum length of 10 key presses, so all are valid answers.
 
-    ADDENDUM:
-    Answers only need to be printed "up to equivalence" where we define that
-    V^mACV^n is equivalent to V^nACV^m.
-    (Question: does this change the minimum complexity?)
+Hard version:
+    Return *all* valid answers, instead of just one.
+    To simplify this, the answers only need to be printed "up to equivalence",
+    where equivalence is defined by:
+        V^m A C V^n == V^n A C V^m
+    for all positive integers m and n.
+
+External links on the copy-paste problem:
+    https://math.stackexchange.com/questions/483596/least-amount-of-steps-to-get-over-1000/48365
+    https://codegolf.stackexchange.com/questions/38410/copy-paste-master
 """
