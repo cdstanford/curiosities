@@ -40,10 +40,125 @@ Hard version:
     Return *all* valid answers, instead of just one.
     To simplify this, the answers only need to be printed "up to equivalence",
     where equivalence is defined by:
-        V^m A C V^n == V^n A C V^m
+        (not a V) V^m AC V^n (not a V) == (not a V) V^n AC V^m (not a V)
     for all positive integers m and n.
+
+Time complexity:
+    The solution here has constant time complexity (assuming O(1) arithmetic
+    operations) using the internal representation of the solution as a tuple.
+    However, printing out the solution as a string of key presses
+    takes time O(log(n)).
 
 External links on the copy-paste problem:
     https://math.stackexchange.com/questions/483596/least-amount-of-steps-to-get-over-1000/48365
     https://codegolf.stackexchange.com/questions/38410/copy-paste-master
 """
+
+import math
+import operator
+import functools
+
+"""
+Sequences of copy-pastes are represented as 9-tuples
+    (v_0, v_1, ..., v_8)
+where this corresponds to the sequence
+    (AC)^(v_0) (ACV)^(v_1) (ACVV)^(v_2) (ACVVV)^(v_3) ... (ACVVVVVVVV)^(v_8).
+
+See copy-paste.md for the formal development of this.
+
+In actuality, v_0 and v_1 will always be 0, but they are included to
+make indexing more natural (v_i corresponds to the number of sequences of
+i Vs in a row).
+"""
+
+TUP_LEN = 9
+
+def prod(tup):
+    return functools.reduce(operator.mul, tup, 1)
+
+def cost(tup):
+    # Cost = number of key presses
+    return sum([(i+2) * tup[i] for i in range(TUP_LEN)])
+
+def score(tup):
+    # Score = resulting message size
+    # Note: using log score is more compact and efficient, but I'm avoiding
+    # floating point and just making sure to call this only for small tuples.
+    return prod(i**(tup[i]) for i in range(TUP_LEN))
+
+def key_presses(tup):
+    # Return the sequence of key presses
+    return ''.join("AC" + "V" * i for i in range(TUP_LEN) for j in range(tup[i]))
+
+
+def tuples_bounded_by(tup):
+    """
+    Generate all tuples of nonnegative integers where the coordinates are
+    bounded by the given tuple.
+    """
+    if len(tup) == 0:
+        yield ()
+    else:
+        tup_head = tup[0]
+        tup_tail = tup[1:]
+        for tail in tuples_bounded_by(tup_tail):
+            for head in range(tup_head + 1):
+                yield (head,) + tail
+        # Note: using a generator expression directly (as follows)
+        # doesn't work for some reason.
+        # return (
+        #     (head,) + tail
+        #     for tail in tuples_bounded_by(tup[1:])
+        #     for head in range(tup[0] + 1)
+        # )
+
+CANDIDATE_BOUNDS = (0, 0, 1, 3, 0, 30, 4, 2, 1)
+def cost_optimal_tuple_candiates():
+    """
+    Generate all candidates for cost-optimal tuples where v_4 = 0.
+    There are 7440 of them.
+
+    These are used to build cost-optimal tuples later on (see copy-paste.md)
+    """
+    return tuples_bounded_by(CANDIDATE_BOUNDS)
+assert len(CANDIDATE_BOUNDS) == TUP_LEN
+assert len(list(cost_optimal_tuple_candiates())) == 7440
+
+def get_all_solutions(target):
+    """
+    Print all sequences of minimum cost which reach the target or higher.
+    """
+    candidates = []
+    for tup in cost_optimal_tuple_candiates():
+        s = score(tup)
+        # Add 4s until score is above target
+        if target <= s:
+            num_fours = 0
+        else:
+            num_fours = math.ceil(math.log(target / s, 4))
+        candidate = tup[:4] + (num_fours,) + tup[5:]
+        candidates.append(candidate)
+    # Keep candidates with the min cost
+    min_cost = min(cost(cand) for cand in candidates)
+    candidates = [cand for cand in candidates if cost(cand) == min_cost]
+    # Print solution
+    print("===== Results =====")
+    print(f"Min number of keypresses: {min_cost}")
+    print(f"Number of inequivalent solutions: {len(candidates)}")
+    print(f"Solutions as tuples:")
+    for cand in candidates:
+        print(f"  {cand}")
+    print(f"Solutions as key presses:")
+    for cand in candidates:
+        print(f"  {key_presses(cand)}")
+
+print("Target?")
+while True:
+    try:
+        t = int(input())
+        assert t >= 0
+    except (ValueError, AssertionError):
+        print("Target should be a nonnegative integer")
+    else:
+        break
+get_all_solutions(t)
