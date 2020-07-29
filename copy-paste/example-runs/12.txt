@@ -1,0 +1,10 @@
+$ python3 copy-paste.py
+Target?
+12
+===== Results =====
+Min number of keypresses: 11
+Number of inequivalent solutions: 1
+Solutions as tuples:
+  (0, 1, 1, 0, 0, 0, 0)
+Solutions as key presses:
+  ACVVVACVVVV

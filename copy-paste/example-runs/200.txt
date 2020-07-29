@@ -1,0 +1,24 @@
+$ python3 copy-paste.py
+Target?
+200
+===== Results =====
+Min number of keypresses: 24
+Number of inequivalent solutions: 8
+Solutions as tuples:
+  (0, 0, 4, 0, 0, 0, 0)
+  (0, 1, 2, 1, 0, 0, 0)
+  (1, 0, 1, 2, 0, 0, 0)
+  (0, 2, 0, 2, 0, 0, 0)
+  (0, 2, 1, 0, 1, 0, 0)
+  (0, 0, 0, 0, 3, 0, 0)
+  (0, 0, 0, 1, 1, 1, 0)
+  (0, 0, 0, 2, 0, 0, 1)
+Solutions as key presses:
+  ACVVVVACVVVVACVVVVACVVVV
+  ACVVVACVVVVACVVVVACVVVVV
+  ACVVACVVVVACVVVVVACVVVVV
+  ACVVVACVVVACVVVVVACVVVVV
+  ACVVVACVVVACVVVVACVVVVVV
+  ACVVVVVVACVVVVVVACVVVVVV
+  ACVVVVVACVVVVVVACVVVVVVV
+  ACVVVVVACVVVVVACVVVVVVVV
