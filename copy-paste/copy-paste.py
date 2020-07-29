@@ -66,7 +66,7 @@ Sequences of copy-pastes are represented as 9-tuples
 where this corresponds to the sequence
     (AC)^(v_0) (ACV)^(v_1) (ACVV)^(v_2) (ACVVV)^(v_3) ... (ACVVVVVVVV)^(v_8).
 
-See copy-paste.md for the formal development of this.
+See analysis.md for the formal development of this.
 
 In actuality, v_0 and v_1 will always be 0, but they are included to
 make indexing more natural (v_i corresponds to the number of sequences of
@@ -113,7 +113,7 @@ def cost_optimal_tuple_candiates():
     Generate all candidates for cost-optimal tuples where v_4 = 0.
     There are 7440 of them.
 
-    These are used to build cost-optimal tuples later on (see copy-paste.md)
+    These are used to build cost-optimal tuples later on (see analysis.md)
     """
     return tuples_bounded_by(CANDIDATE_BOUNDS)
 assert len(CANDIDATE_BOUNDS) == TUP_LEN
