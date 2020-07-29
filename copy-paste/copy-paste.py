@@ -101,18 +101,11 @@ def tuples_bounded_by(tup):
     if len(tup) == 0:
         yield ()
     else:
-        tup_head = tup[0]
-        tup_tail = tup[1:]
-        for tail in tuples_bounded_by(tup_tail):
-            for head in range(tup_head + 1):
-                yield (head,) + tail
-        # Note: using a generator expression directly (as follows)
-        # doesn't work for some reason.
-        # return (
-        #     (head,) + tail
-        #     for tail in tuples_bounded_by(tup[1:])
-        #     for head in range(tup[0] + 1)
-        # )
+        yield from (
+            (head,) + tail
+            for tail in tuples_bounded_by(tup[1:])
+            for head in range(tup[0] + 1)
+        )
 
 CANDIDATE_BOUNDS = (0, 0, 1, 3, 0, 30, 4, 2, 1)
 def cost_optimal_tuple_candiates():
@@ -149,7 +142,7 @@ def get_all_solutions(target):
     print(f"Number of inequivalent solutions: {len(candidates)}")
     print(f"Solutions as tuples:")
     for cand in candidates:
-        print(f"  {cand}")
+        print(f"  {cand[2:]}")
     print(f"Solutions as key presses:")
     for cand in candidates:
         print(f"  {key_presses(cand)}")
