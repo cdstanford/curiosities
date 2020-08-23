@@ -21,7 +21,7 @@ Example solution obtained by Z3 when N = 4:
 Notes on problem encoding:
     We observe that for any two runners at speeds r, s (in laps / hour),
     they meet every 1 / |s - r| hours. This means that r / |s - r| (the
-    distance travelled in laps) must be a positive integer. We can also
+    distance traveled in laps) must be a positive integer. We can also
     drop the absolute value and simply state that there is some integer n
     (possibly negative) such that r = (s - r) * n.
     This condition, for every pair of speeds, is sufficient to imply the
@@ -29,6 +29,23 @@ Notes on problem encoding:
     that all speeds are positive integers (in particular, not zero).
     (That they are nonzero rules out n = 0 and also means they must be
     distinct, from r = (s - r) * n.)
+
+Proof that there is a solution for all N:
+    We proceed by induction.
+    Suppose that there is a solution with runner speeds r_1, r_2, ..., r_N,
+    and assume WLOG that r_i are all positive integers. Let
+        R = LCM(r_1, r_2, ..., r_N)
+    and consider the set of N+1 positive integers
+        R, R + r_1, R + r_2, ..., R + r_n.
+    We claim that this set of runner speeds works. First, consider the
+    pair of speeds (R + r_i) and (R + r_j): their difference is (r_i - r_j).
+    This divides r_i and r_j by inductive hypothesis, and it divides R
+    because it divides r_i (since R is the LCM), so it divides (R + r_i)
+    and (R + r_j). Second, consider the pair of speeds R and (R + r_i).
+    The difference is r_i, which divides R since it is the LCM,
+    so it divides R and R + r_i. This completes the inductive step.
+    Finally, for the base case we take a single runner with speed 1, and
+    this completes the proof.
 """
 
 import z3
