@@ -14,7 +14,7 @@ eventually says "unknown".
 
 Example solution obtained by Z3 when N = 4:
     speed0 = 6,
-    speed1 = 8
+    speed1 = 8,
     speed2 = 9,
     speed3 = 12
 
