@@ -7,9 +7,11 @@ turn all 100 lightbulbs on?
 
 We write a solution in general where 100 is replaced by N, and
 1 <= K <= (N / 2).
+
+For a handwritten solution (proof of possibility/impossibility in the general
+case), see lightbulb-circle-solution.md.
 """
 
-import itertools
 import z3
 
 result_to_str = {
