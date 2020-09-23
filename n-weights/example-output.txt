@@ -1,0 +1,14 @@
+========== Number of weights: 1 ==========
+Result: sat
+Model: [w0 = 1]
+========== Number of weights: 2 ==========
+Result: unsat
+========== Number of weights: 3 ==========
+Result: unsat
+========== Number of weights: 4 ==========
+Result: unsat
+========== Number of weights: 5 ==========
+Result: unsat
+========== Number of weights: 6 ==========
+Result: sat
+Model: [w3 = 6, w2 = 4, w5 = 5, w4 = 7, w0 = 3, w1 = 8]
