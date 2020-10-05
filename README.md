@@ -6,7 +6,9 @@ It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/p
 
 ### Languages
 
-So far, everything is in Python 3. Several of the solutions are proofs using the [Z3 Theorem prover](https://github.com/Z3Prover/z3). To run these, first install Z3 via `pip3 install z3-solver` or by following the instructions on that page.
+Most solutions are written in Python 3. Some of these are proofs using the [Z3 Theorem prover](https://github.com/Z3Prover/z3). To run these, first install Z3 via `pip3 install z3-solver` or by following the instructions on that page.
+
+I also use the [Alloy language](https://alloytools.org/).
 
 ### Basic Information
 
