@@ -6,6 +6,7 @@
     so that we can get the answer for larger values of n.
 */
 
+use std::cmp::Ordering;
 use std::vec::Vec;
 
 /*
@@ -45,14 +46,14 @@ mod poset {
             // Check edges satisfy transitivity
             for edge1 in &self.edges {
                 for edge2 in &self.edges {
-                    if edge1.1 == edge2.0 {
-                        if !self.edges.contains(&(edge1.0, edge2.1)) {
-                            return false;
-                        }
+                    if edge1.1 == edge2.0
+                        && !self.edges.contains(&(edge1.0, edge2.1))
+                    {
+                        return false;
                     }
                 }
             }
-            return true;
+            true
         }
         fn assert_invariant(&self) {
             // No-op in release mode
@@ -164,66 +165,76 @@ fn enumerate_posets(size: Ele) -> Vec<Poset> {
 // Enumerate all candidates for a universal poset, using a few simple
 // search optimizations.
 fn enumerate_candidate_universal_posets(
-    base_size: Ele, universal_size: Ele,
+    base_size: Ele,
+    universal_size: Ele,
 ) -> Vec<Poset> {
     let min_size = if base_size == 0 { 0 } else { base_size * 2 - 1 };
-    if universal_size < min_size {
-        vec![]
-    }
-    else if universal_size == min_size {
-        let mut universal = Poset::new_unordered(min_size);
-        // 0 through base_size - 1 ordered
-        // base_size through base_size * 2 - 2 unordered
-        for i in 1..base_size {
-            universal.add_edge(i - 1, i);
+    match universal_size.cmp(&min_size) {
+        Ordering::Less => vec![],
+        Ordering::Equal => {
+            let mut universal = Poset::new_unordered(min_size);
+            // 0 through base_size - 1 ordered
+            // base_size through base_size * 2 - 2 unordered
+            for i in 1..base_size {
+                universal.add_edge(i - 1, i);
+            }
+            vec![universal]
         }
-        vec![universal]
-    }
-    else {
-        let mut result = Vec::new();
-        let smaller_posets = enumerate_candidate_universal_posets(
-            base_size, universal_size - 1
-        );
-        let smaller_subsets = enumerate_subsets(universal_size - 1);
-        for subset1 in smaller_subsets.clone().drain(..) {
-            for subset2 in smaller_subsets.clone().drain(..) {
-                // If the subsets overlap, skip
-                let mut overlap = false;
-                for &ele1 in &subset1 {
-                    for &ele2 in &subset2 {
-                        if ele1 == ele2 {
-                            overlap = true;
-                            break;
-                        }
-                    }
-                    if overlap { break; }
-                }
-                if overlap { continue; }
-                for mut poset in smaller_posets.clone().drain(..) {
-                    // If the subsets create a cycle, skip
-                    let mut cycle = false;
+        Ordering::Greater => {
+            let mut result = Vec::new();
+            let smaller_posets = enumerate_candidate_universal_posets(
+                base_size,
+                universal_size - 1,
+            );
+            let smaller_subsets = enumerate_subsets(universal_size - 1);
+            for subset1 in smaller_subsets.clone().drain(..) {
+                for subset2 in smaller_subsets.clone().drain(..) {
+                    // If the subsets overlap, skip
+                    let mut overlap = false;
                     for &ele1 in &subset1 {
                         for &ele2 in &subset2 {
-                            if poset.edges.contains(&(ele2, ele1)) {
-                                cycle = true;
+                            if ele1 == ele2 {
+                                overlap = true;
                                 break;
                             }
                         }
-                        if cycle { break; }
+                        if overlap {
+                            break;
+                        }
                     }
-                    if cycle { continue; }
-                    poset.increase_size_by(1);
-                    for ele in subset1.clone().drain(..) {
-                        poset.add_edge(ele, universal_size - 1);
+                    if overlap {
+                        continue;
                     }
-                    for ele in subset2.clone().drain(..) {
-                        poset.add_edge(universal_size - 1, ele);
+                    for mut poset in smaller_posets.clone().drain(..) {
+                        // If the subsets create a cycle, skip
+                        let mut cycle = false;
+                        for &ele1 in &subset1 {
+                            for &ele2 in &subset2 {
+                                if poset.edges.contains(&(ele2, ele1)) {
+                                    cycle = true;
+                                    break;
+                                }
+                            }
+                            if cycle {
+                                break;
+                            }
+                        }
+                        if cycle {
+                            continue;
+                        }
+                        poset.increase_size_by(1);
+                        for ele in subset1.clone().drain(..) {
+                            poset.add_edge(ele, universal_size - 1);
+                        }
+                        for ele in subset2.clone().drain(..) {
+                            poset.add_edge(universal_size - 1, ele);
+                        }
+                        result.push(poset);
                     }
-                    result.push(poset);
                 }
             }
+            result
         }
-        result
     }
 }
 // Enumerate all bijectionss from 0..size -> 0..size
@@ -237,16 +248,16 @@ fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
         // Element size-1 maps to i
         for mut bij in smaller_bijections.clone().drain(..) {
             assert_eq!(bij.len(), size - 1);
-            for j in 0..(size - 1) {
-                if bij[j] >= i {
-                    bij[j] += 1;
+            for item in bij.iter_mut() {
+                if *item >= i {
+                    *item += 1;
                 }
             }
             bij.push(i);
             results.push(bij);
         }
     }
-    return results;
+    results
 }
 
 /*
@@ -260,12 +271,12 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
     let base_posets = enumerate_posets(base_size);
     println!("Enumerated {} posets of size {}", base_posets.len(), base_size);
     for universal_size in base_size.. {
-        let mut candidates = enumerate_candidate_universal_posets(
-            base_size, universal_size
-        );
+        let mut candidates =
+            enumerate_candidate_universal_posets(base_size, universal_size);
         println!(
             "Testing {} candidates of size {}...",
-            candidates.len(), universal_size
+            candidates.len(),
+            universal_size
         );
         for candidate in candidates.drain(..) {
             let mut is_universal = true;
@@ -308,7 +319,7 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
-    const TEST_UPTO : Ele = 10;
+    const TEST_UPTO: Ele = 10;
 
     #[test]
     fn test_unordered_poset() {
@@ -348,13 +359,23 @@ mod tests {
     fn test_enumerate_subsets() {
         assert_eq!(enumerate_subsets(0), vec![vec![],]);
         assert_eq!(enumerate_subsets(1), vec![vec![], vec![0],]);
-        assert_eq!(enumerate_subsets(2), vec![
-            vec![], vec![1], vec![0], vec![0, 1],
-        ]);
-        assert_eq!(enumerate_subsets(3), vec![
-            vec![], vec![2], vec![1], vec![1, 2],
-            vec![0], vec![0, 2], vec![0, 1], vec![0, 1, 2],
-        ]);
+        assert_eq!(
+            enumerate_subsets(2),
+            vec![vec![], vec![1], vec![0], vec![0, 1],]
+        );
+        assert_eq!(
+            enumerate_subsets(3),
+            vec![
+                vec![],
+                vec![2],
+                vec![1],
+                vec![1, 2],
+                vec![0],
+                vec![0, 2],
+                vec![0, 1],
+                vec![0, 1, 2],
+            ]
+        );
     }
 
     #[test]
@@ -382,11 +403,17 @@ mod tests {
         assert_eq!(enumerate_bijections(0), vec![vec![],]);
         assert_eq!(enumerate_bijections(1), vec![vec![0],]);
         assert_eq!(enumerate_bijections(2), vec![vec![1, 0], vec![0, 1],]);
-        assert_eq!(enumerate_bijections(3), vec![
-            vec![2, 1, 0], vec![1, 2, 0],
-            vec![2, 0, 1], vec![0, 2, 1],
-            vec![1, 0, 2], vec![0, 1, 2],
-        ]);
+        assert_eq!(
+            enumerate_bijections(3),
+            vec![
+                vec![2, 1, 0],
+                vec![1, 2, 0],
+                vec![2, 0, 1],
+                vec![0, 2, 1],
+                vec![1, 0, 2],
+                vec![0, 1, 2],
+            ]
+        );
     }
 
     #[test]
