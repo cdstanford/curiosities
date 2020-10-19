@@ -97,12 +97,13 @@ mod poset {
             assert!(!self.edges.contains(&(e2, e1)));
             let old_edges = self.edges.clone();
             self.add_edge_core(e1, e2);
-            for edge in &old_edges {
-                if edge.1 == e1 {
-                    self.add_edge_core(edge.0, e2);
-                }
-                if edge.0 == e2 {
-                    self.add_edge_core(e1, edge.1);
+            for edge1 in &old_edges {
+                if edge1.1 == e1 {
+                    for edge2 in &old_edges {
+                        if edge2.0 == e2 {
+                            self.add_edge_core(edge1.0, edge2.1);
+                        }
+                    }
                 }
             }
             self.assert_invariant();
@@ -164,11 +165,13 @@ fn enumerate_posets(size: Ele) -> Vec<Poset> {
 }
 // Enumerate all candidates for a universal poset, using a few simple
 // search optimizations.
+// This is a super gnarly function and should be rewritten...
 fn enumerate_candidate_universal_posets(
     base_size: Ele,
     universal_size: Ele,
 ) -> Vec<Poset> {
-    let min_size = if base_size == 0 { 0 } else { base_size * 2 - 1 };
+    // let min_size = if base_size == 0 { 0 } else { base_size * 2 - 1 };
+    let min_size = base_size;
     match universal_size.cmp(&min_size) {
         Ordering::Less => vec![],
         Ordering::Equal => {
@@ -237,35 +240,63 @@ fn enumerate_candidate_universal_posets(
         }
     }
 }
-// Enumerate all bijectionss from 0..size -> 0..size
-fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
-    if size == 0 {
+// Enumerate all injections from 0..isize -> 0..osize
+fn enumerate_injections(isize: Ele, osize: Ele) -> Vec<Vec<Ele>> {
+    if isize == 0 {
         return vec![vec![]];
+    } else if osize == 0 {
+        return vec![];
     }
     let mut results = Vec::new();
-    let smaller_bijections = enumerate_bijections(size - 1);
-    for i in 0..size {
-        // Element size-1 maps to i
-        for mut bij in smaller_bijections.clone().drain(..) {
-            assert_eq!(bij.len(), size - 1);
-            for item in bij.iter_mut() {
+    let smaller_injections = enumerate_injections(isize - 1, osize - 1);
+    for i in 0..osize {
+        // Element isize-1 maps to i
+        for mut inj in smaller_injections.clone().drain(..) {
+            assert_eq!(inj.len(), isize - 1);
+            for item in inj.iter_mut() {
                 if *item >= i {
                     *item += 1;
                 }
             }
-            bij.push(i);
-            results.push(bij);
+            inj.push(i);
+            results.push(inj);
         }
     }
     results
+}
+// Enumerate all bijections from 0..size -> 0..size
+#[allow(dead_code)]
+fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
+    enumerate_injections(size, size)
 }
 
 /*
     Solve the universal poset problem
 */
-fn poset_contains(_p1: &Poset, _p2: &Poset) -> bool {
-    // TODO: Implement
-    true
+fn poset_contains(p1: &Poset, p2: &Poset) -> bool {
+    let mut injections = enumerate_injections(p1.size, p2.size);
+    for inj in injections.drain(..) {
+        let mut skip = false;
+        for e1 in 0..(p1.size) {
+            for f1 in 0..(p1.size) {
+                let e2 = inj[e1];
+                let f2 = inj[f1];
+                if p1.edges.contains(&(e1, f1)) != p2.edges.contains(&(e2, f2))
+                {
+                    skip = true;
+                    break;
+                }
+            }
+            if skip {
+                break;
+            }
+        }
+        if !skip {
+            // This injection works
+            return true;
+        }
+    }
+    false
 }
 fn solve_universal_poset(base_size: Ele) -> Ele {
     let base_posets = enumerate_posets(base_size);
@@ -273,12 +304,12 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
     for universal_size in base_size.. {
         let mut candidates =
             enumerate_candidate_universal_posets(base_size, universal_size);
-        println!(
-            "Testing {} candidates of size {}...",
-            candidates.len(),
-            universal_size
-        );
-        for candidate in candidates.drain(..) {
+        let num_candidates = candidates.len();
+        for (num, candidate) in candidates.drain(..).enumerate() {
+            print!(
+                "\rTesting {} candidates of size {}... ({} complete)",
+                num_candidates, universal_size, num
+            );
             let mut is_universal = true;
             for base_poset in &base_posets {
                 if !poset_contains(base_poset, &candidate) {
@@ -286,11 +317,18 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
                     break;
                 }
             }
+            print!(
+                "\rTesting {} candidates of size {}... ({} complete)",
+                num_candidates,
+                universal_size,
+                num + 1
+            );
             if is_universal {
-                println!("Universal poset found: {:?}", candidate);
+                println!("\nUniversal poset found: {:?}", candidate);
                 return universal_size;
             }
         }
+        println!();
     }
     unreachable!()
 }
@@ -381,8 +419,10 @@ mod tests {
     #[test]
     fn test_enumerate_universal_posets_min_size() {
         for n in 0..TEST_UPTO {
-            let min_size = if n == 0 { 0 } else { 2 * n - 1 };
-            let num_edges = if n == 0 { 0 } else { n * (n + 1) / 2 + (n - 1) };
+            // Old way of enumerating candidate posets
+            // let min_size = if n == 0 { 0 } else { 2 * n - 1 };
+            let min_size = n;
+            let num_edges = n * (n + 1) / 2;
             let posets = enumerate_candidate_universal_posets(n, min_size);
             assert_eq!(posets.len(), 1);
             assert_eq!(posets[0].size, min_size);
@@ -392,7 +432,9 @@ mod tests {
     #[test]
     fn test_enumerate_universal_posets_too_small() {
         for n in 1..TEST_UPTO {
-            let too_small = 2 * n - 2;
+            // Old way of enumerating candidate posets
+            // let too_small = 2 * n - 2;
+            let too_small = n - 1;
             let posets = enumerate_candidate_universal_posets(n, too_small);
             assert_eq!(posets.len(), 0);
         }
@@ -412,6 +454,24 @@ mod tests {
                 vec![0, 2, 1],
                 vec![1, 0, 2],
                 vec![0, 1, 2],
+            ]
+        );
+    }
+
+    #[test]
+    fn test_enumerate_injections() {
+        assert_eq!(enumerate_injections(0, 1), vec![vec![],]);
+        assert_eq!(enumerate_injections(1, 2), vec![vec![0], vec![1],]);
+        assert_eq!(enumerate_injections(2, 1), vec![] as Vec<Vec<Ele>>);
+        assert_eq!(
+            enumerate_injections(2, 3),
+            vec![
+                vec![1, 0],
+                vec![2, 0],
+                vec![0, 1],
+                vec![2, 1],
+                vec![0, 2],
+                vec![1, 2],
             ]
         );
     }
