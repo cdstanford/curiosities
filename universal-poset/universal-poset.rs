@@ -117,6 +117,40 @@ mod poset {
             }
             self.assert_invariant();
         }
+        // Check if one poset contains another
+        pub fn embeds_in(&self, other: &Self) -> bool {
+            use crate::enumerate_injections;
+            let mut injections = enumerate_injections(self.size, other.size);
+            for inj in injections.drain(..) {
+                let mut skip = false;
+                for e1 in 0..(self.size) {
+                    for f1 in 0..(self.size) {
+                        let e2 = inj[e1];
+                        let f2 = inj[f1];
+                        if self.edges.contains(&(e1, f1))
+                            != other.edges.contains(&(e2, f2))
+                        {
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if skip {
+                        break;
+                    }
+                }
+                if !skip {
+                    // This injection works
+                    return true;
+                }
+            }
+            false
+        }
+        // Check if two posets are isomorphic
+        pub fn isomorphic(&self, other: &Self) -> bool {
+            self.size == other.size
+                && self.edges.len() == other.edges.len()
+                && self.embeds_in(other)
+        }
     }
 }
 
@@ -190,8 +224,9 @@ fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
 /*
     Enumerators for posets, up to isomorphism.
 
-    These enumerators provide an at-least-once guarantee but
+    Some of these enumerators provide an at-least-once guarantee but
     do not guarantee that some posets will not be produced multiple times.
+    Others are exactly-once.
 */
 
 // Enumerate posets given a list of the number of elements at each level
@@ -200,6 +235,7 @@ fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
 // Precondition:
 //   - each element of level_sizes is nonzero
 //   - the sum of these elements is total_size
+// Guarantee: at-least-once
 fn enumerate_posets_leveled(
     level_sizes: &mut Vec<Ele>,
     total_size: Ele,
@@ -244,19 +280,30 @@ fn enumerate_posets_leveled(
     }
 }
 
-// Enumerate posets with size elements
+// Enumerate posets with size elements.
+// Guarantee: exactly-once
 fn enumerate_posets(size: Ele) -> Vec<Poset> {
     if size == 0 {
         vec![Poset::new_empty()]
     } else {
-        let mut result = Vec::new();
+        let mut results = Vec::new();
         for mut partition in enumerate_partitions(size).drain(..) {
-            let mut posets = enumerate_posets_leveled(&mut partition, size);
-            for poset in posets.drain(..) {
-                result.push(poset);
+            let posets = enumerate_posets_leveled(&mut partition, size);
+            for (i, poset_ref) in posets.iter().enumerate() {
+                // Only add if not isomorphic to any earlier poset
+                let mut isomorphic = false;
+                for other_ref in posets.iter().take(i) {
+                    if poset_ref.isomorphic(other_ref) {
+                        isomorphic = true;
+                        break;
+                    }
+                }
+                if !isomorphic {
+                    results.push(poset_ref.clone());
+                }
             }
         }
-        result
+        results
     }
     // // Old strategy: enumerate posets of size size-1, then add a maximal element.
     // let mut smaller_subsets = enumerate_subsets(size - 1);
@@ -353,31 +400,6 @@ fn enumerate_candidate_universal_posets(
 /*
     Solve the universal poset problem
 */
-fn poset_contains(p1: &Poset, p2: &Poset) -> bool {
-    let mut injections = enumerate_injections(p1.size, p2.size);
-    for inj in injections.drain(..) {
-        let mut skip = false;
-        for e1 in 0..(p1.size) {
-            for f1 in 0..(p1.size) {
-                let e2 = inj[e1];
-                let f2 = inj[f1];
-                if p1.edges.contains(&(e1, f1)) != p2.edges.contains(&(e2, f2))
-                {
-                    skip = true;
-                    break;
-                }
-            }
-            if skip {
-                break;
-            }
-        }
-        if !skip {
-            // This injection works
-            return true;
-        }
-    }
-    false
-}
 fn solve_universal_poset(base_size: Ele) -> Ele {
     let base_posets = enumerate_posets(base_size);
     println!("Enumerated {} posets of size {}", base_posets.len(), base_size);
@@ -392,7 +414,7 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
             );
             let mut is_universal = true;
             for base_poset in &base_posets {
-                if !poset_contains(base_poset, &candidate) {
+                if !base_poset.embeds_in(&candidate) {
                     is_universal = false;
                     break;
                 }
@@ -541,6 +563,19 @@ mod tests {
                 vec![1, 2],
             ]
         );
+    }
+
+    #[test]
+    fn test_enumerate_posets() {
+        // https://oeis.org/A000112
+        assert_eq!(enumerate_posets(0).len(), 1);
+        assert_eq!(enumerate_posets(1).len(), 1);
+        assert_eq!(enumerate_posets(2).len(), 2);
+        assert_eq!(enumerate_posets(3).len(), 5);
+        assert_eq!(enumerate_posets(4).len(), 16);
+        // TODO: Debug. Returns 62 instead of 63.
+        assert_eq!(enumerate_posets(5).len(), 63);
+        // assert_eq!(enumerate_posets(6).len(), 318);
     }
 
     #[test]
