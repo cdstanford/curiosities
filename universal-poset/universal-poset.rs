@@ -23,7 +23,7 @@ mod poset {
     use std::collections::HashSet;
     pub type Ele = usize;
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct Poset {
         pub size: Ele,
         pub edges: HashSet<(Ele, Ele)>,
@@ -233,28 +233,30 @@ fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
 // Each element at level 1 must be greater than at least one element at level 0,
 // and so on.
 // Precondition:
-//   - each element of level_sizes is nonzero
+//   - each element of level_sizes is nonzero, except possibly the last one
 //   - the sum of these elements is total_size
 // Guarantee: at-least-once
-fn enumerate_posets_leveled(
+fn enumerate_posets_leveled_rec(
     level_sizes: &mut Vec<Ele>,
     total_size: Ele,
 ) -> Vec<Poset> {
+    // println!("DEBUG: {:?}, {}", level_sizes, total_size);
     let numlevels = level_sizes.len();
     if numlevels == 0 {
         vec![Poset::new_empty()]
+    } else if level_sizes[numlevels - 1] == 0 {
+        level_sizes.pop();
+        let results = enumerate_posets_leveled_rec(level_sizes, total_size);
+        level_sizes.push(0);
+        results
     } else if numlevels == 1 {
         debug_assert!(level_sizes[0] == total_size);
         vec![Poset::new_unordered(total_size)]
     } else {
-        // Recurse then re-push top level to the level_sizes
-        let prev_size = total_size - level_sizes[numlevels - 1];
-        let prevprev_size = prev_size - level_sizes[numlevels - 2];
-        let tmp = level_sizes.pop().unwrap();
-        let mut subposets = enumerate_posets_leveled(level_sizes, prev_size);
-        level_sizes.push(tmp);
         // Make a list of all subsets of the previous levels that have at
         // least one element in the top level
+        let prev_size = total_size - level_sizes[numlevels - 1];
+        let prevprev_size = prev_size - level_sizes[numlevels - 2];
         let mut subsets = enumerate_subsets(prev_size);
         let mut good_subsets = Vec::new();
         for subset in subsets.drain(..) {
@@ -262,22 +264,49 @@ fn enumerate_posets_leveled(
                 good_subsets.push(subset);
             }
         }
+        // Recurse to find all smaller posets
+        level_sizes[numlevels - 1] -= 1;
+        let mut subposets =
+            enumerate_posets_leveled_rec(level_sizes, total_size - 1);
+        level_sizes[numlevels - 1] += 1;
         // For all prev posets, add elements dependent on the good subsets
         let mut results = Vec::new();
         for mut poset in subposets.drain(..) {
-            poset.increase_size_by(total_size - prev_size);
-            for ele in prev_size..total_size {
-                for subset in &good_subsets {
-                    let mut result = poset.clone();
-                    for &prev_ele in subset {
-                        result.add_edge(prev_ele, ele);
-                    }
-                    results.push(result);
+            poset.increase_size_by(1);
+            for subset in &good_subsets {
+                // println!("  poset: {:?}", poset);
+                // println!("  subset: {:?}", subset);
+                let mut result = poset.clone();
+                for &prev_ele in subset {
+                    // println!("  adding edge: {}, {}", prev_ele, total_size - 1);
+                    result.add_edge(prev_ele, total_size - 1);
                 }
+                // println!("  result: {:?}", result);
+                results.push(result);
             }
         }
         results
     }
+}
+// Unlike the _rec version, this one provides an exactly-once guarantee
+fn enumerate_posets_leveled(level_sizes: &mut Vec<Ele>) -> Vec<Poset> {
+    let mut results = Vec::new();
+    let posets =
+        enumerate_posets_leveled_rec(level_sizes, level_sizes.iter().sum());
+    for (i, poset_ref) in posets.iter().enumerate() {
+        // Only add if not isomorphic to any earlier poset
+        let mut isomorphic = false;
+        for other_ref in posets.iter().take(i) {
+            if poset_ref.isomorphic(other_ref) {
+                isomorphic = true;
+                break;
+            }
+        }
+        if !isomorphic {
+            results.push(poset_ref.clone());
+        }
+    }
+    results
 }
 
 // Enumerate posets with size elements.
@@ -288,20 +317,7 @@ fn enumerate_posets(size: Ele) -> Vec<Poset> {
     } else {
         let mut results = Vec::new();
         for mut partition in enumerate_partitions(size).drain(..) {
-            let posets = enumerate_posets_leveled(&mut partition, size);
-            for (i, poset_ref) in posets.iter().enumerate() {
-                // Only add if not isomorphic to any earlier poset
-                let mut isomorphic = false;
-                for other_ref in posets.iter().take(i) {
-                    if poset_ref.isomorphic(other_ref) {
-                        isomorphic = true;
-                        break;
-                    }
-                }
-                if !isomorphic {
-                    results.push(poset_ref.clone());
-                }
-            }
+            results.append(&mut enumerate_posets_leveled(&mut partition));
         }
         results
     }
@@ -441,7 +457,7 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
 fn main() {
     println!("====== Universal Poset Problem Solution ======");
     let mut results = Vec::new();
-    for n in 0..5 {
+    for n in 0..10 {
         println!("==== n = {} ====", n);
         results.push(solve_universal_poset(n));
     }
@@ -459,11 +475,12 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
-    const TEST_UPTO: Ele = 10;
+    const TEST_UPTO_BIG: Ele = 10;
+    const TEST_UPTO_SMALL: Ele = 5;
 
     #[test]
     fn test_unordered_poset() {
-        for n in 0..TEST_UPTO {
+        for n in 0..TEST_UPTO_BIG {
             let simple = Poset::new_unordered(n);
             assert_eq!(simple.size, n);
             assert_eq!(simple.edges.len(), n);
@@ -471,7 +488,7 @@ mod tests {
     }
     #[test]
     fn test_line_poset() {
-        for n in 1..TEST_UPTO {
+        for n in 1..TEST_UPTO_BIG {
             let mut line = Poset::new_unordered(n);
             for i in 1..n {
                 line.add_edge(i - 1, i)
@@ -566,6 +583,35 @@ mod tests {
     }
 
     #[test]
+    fn test_enumerate_posets_leveled() {
+        assert_eq!(
+            enumerate_posets_leveled(&mut vec![]),
+            vec![Poset::new_empty()]
+        );
+        for n in 1..TEST_UPTO_SMALL {
+            assert_eq!(
+                enumerate_posets_leveled(&mut vec![n]),
+                vec![Poset::new_unordered(n)]
+            );
+            assert_eq!(enumerate_posets_leveled(&mut vec![n, 1]).len(), n);
+            assert_eq!(enumerate_posets_leveled(&mut vec![1, n]).len(), 1);
+            assert_eq!(enumerate_posets_leveled(&mut vec![1, n, 1]).len(), n);
+            assert_eq!(
+                enumerate_posets_leveled(&mut vec![n, 1, 1]).len(),
+                ((n + 2) * (n + 1) / 2) - (n + 1)
+            );
+            // Disabled slow test
+            // assert_eq!(
+            //     enumerate_posets_leveled(&mut vec![1, n, n]).len(),
+            //     enumerate_posets_leveled(&mut vec![n, n]).len()
+            // );
+        }
+        assert_eq!(enumerate_posets_leveled(&mut vec![2, 2]).len(), 4);
+        assert_eq!(enumerate_posets_leveled(&mut vec![2, 3]).len(), 6);
+        assert_eq!(enumerate_posets_leveled(&mut vec![3, 2]).len(), 9);
+    }
+
+    #[test]
     fn test_enumerate_posets() {
         // https://oeis.org/A000112
         assert_eq!(enumerate_posets(0).len(), 1);
@@ -573,14 +619,14 @@ mod tests {
         assert_eq!(enumerate_posets(2).len(), 2);
         assert_eq!(enumerate_posets(3).len(), 5);
         assert_eq!(enumerate_posets(4).len(), 16);
-        // TODO: Debug. Returns 62 instead of 63.
         assert_eq!(enumerate_posets(5).len(), 63);
+        // Disabled slow test
         // assert_eq!(enumerate_posets(6).len(), 318);
     }
 
     #[test]
     fn test_enumerate_universal_posets_min_size() {
-        for n in 0..TEST_UPTO {
+        for n in 0..TEST_UPTO_BIG {
             // Old way of enumerating candidate posets
             // let min_size = if n == 0 { 0 } else { 2 * n - 1 };
             let min_size = n;
@@ -593,7 +639,7 @@ mod tests {
     }
     #[test]
     fn test_enumerate_universal_posets_too_small() {
-        for n in 1..TEST_UPTO {
+        for n in 1..TEST_UPTO_BIG {
             // Old way of enumerating candidate posets
             // let too_small = 2 * n - 2;
             let too_small = n - 1;
@@ -609,7 +655,7 @@ mod tests {
         assert_eq!(solve_universal_poset(2), 3);
         assert_eq!(solve_universal_poset(3), 5);
     }
-    // Test doesn't work yet due to not implemented functionality
+    // Disabled slow test
     // #[test]
     // fn test_solve_universal_poset_hard() {
     //     assert_eq!(solve_universal_poset(4), 8);
