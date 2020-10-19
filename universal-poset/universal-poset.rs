@@ -10,73 +10,144 @@ use std::cmp::Ordering;
 use std::vec::Vec;
 
 /*
-    Struct for a finite (explicitly enumerated) poset.
+    Struct for a finite, explicitly represented poset.
 
+    Elements are integers between 0 and size - 1.
     As posets are expected to be quite small for this problem,
-    this is naively implemented using a single HashSet for the entire
-    set of edges, and using an edge for every ordering u <= v rather
-    than just for the primitive edges u <= v (primitive meaning that there
-    is no w such that u <= w <= v).
+    this is naively implemented using a single 2D array for the entire
+    set of edges, storing the entire relation u <= v for all pairs u, v.
+    Additionally, there is a compile-time size cap on all posets:
+    MAX_POSET_SIZE.
+    (Without const generics we unfortunately can't make the poset size
+    a type parameter.)
+    We store both forward and backward edges (two 2D arrays).
+
+    TODO: Implement an additional representation with smart isomorphism checking.
+    See the following:
+
+    The main goal of this implementation is to efficiently support comparing
+    two posets for isomorphism, as that is a common operation in solving the
+    problem. The bottleneck is when the two posets are actually isomorphic,
+    so efficient non-isomorphism checking is not so important as efficiently
+    finding a witnessing isomorphism.
+
+    Posets therefore store a list of sizes, where each size is
+    the number of posets at that level. For each i, the elements at "level" i are
+    defined to be the minimal elements that are not at level i-1.
 */
 
 mod poset {
-    use std::collections::HashSet;
-    pub type Ele = usize;
+    use std::fmt;
 
-    #[derive(Clone, Debug, Eq, PartialEq)]
+    const MAX_POSET_SIZE: usize = 20;
+
+    #[derive(Clone, Eq, PartialEq)]
     pub struct Poset {
-        size: Ele,
-        edges: HashSet<(Ele, Ele)>,
+        size: usize,
+        num_edges: usize,
+        fwd_edges: [[bool; MAX_POSET_SIZE]; MAX_POSET_SIZE],
+        bck_edges: [[bool; MAX_POSET_SIZE]; MAX_POSET_SIZE],
+        // TODO:
+        // level_sizes: Vec<usize>,
+    }
+    impl fmt::Debug for Poset {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "Poset {{ {}, {}:", self.size, self.num_edges)?;
+            for u in 0..self.size {
+                for v in self.targets(u) {
+                    write!(f, " {}{}", u, v)?;
+                }
+            }
+            write!(f, " }}")
+        }
     }
     impl Poset {
         /* Getters */
-        pub fn get_size(&self) -> Ele {
+        pub fn get_size(&self) -> usize {
             self.size
         }
-        pub fn get_num_edges(&self) -> Ele {
-            self.edges.len()
+        pub fn get_num_edges(&self) -> usize {
+            self.num_edges
         }
-        pub fn contains_edge(&self, u: Ele, v: Ele) -> bool {
-            self.edges.contains(&(u, v))
+        pub fn contains_edge(&self, u: usize, v: usize) -> bool {
+            self.fwd_edges[u][v]
         }
+        pub fn sources(&self, v: usize) -> Vec<usize> {
+            let mut results = Vec::new();
+            for u in 0..self.size {
+                if self.bck_edges[v][u] {
+                    results.push(u);
+                }
+            }
+            results
+        }
+        pub fn targets(&self, u: usize) -> Vec<usize> {
+            let mut results = Vec::new();
+            for v in 0..self.size {
+                if self.fwd_edges[u][v] {
+                    results.push(v);
+                }
+            }
+            results
+        }
+
         /* Object Invariant */
-        fn invariant(&self) -> bool {
+        fn assert_invariant_core(&self) -> bool {
+            // Check size is OK
+            assert!(self.size <= MAX_POSET_SIZE);
             // Check elements are in range
-            for edge in &self.edges {
-                if edge.0 >= self.size || edge.1 >= self.size {
-                    return false;
+            for u in self.size..MAX_POSET_SIZE {
+                for v in 0..MAX_POSET_SIZE {
+                    assert!(!self.fwd_edges[u][v]);
+                    assert!(!self.fwd_edges[v][u]);
+                    assert!(!self.bck_edges[u][v]);
+                    assert!(!self.bck_edges[v][u]);
                 }
             }
-            // Check edges satisfy reflexivity
-            for i in 0..self.size {
-                if !self.edges.contains(&(i, i)) {
-                    return false;
+            // Check fwd/bck edges correspond
+            for u in 0..self.size {
+                for v in 0..self.size {
+                    assert_eq!(self.fwd_edges[u][v], self.bck_edges[v][u]);
                 }
             }
-            // Check edges satisfy transitivity
-            for edge1 in &self.edges {
-                for edge2 in &self.edges {
-                    if edge1.1 == edge2.0
-                        && !self.edges.contains(&(edge1.0, edge2.1))
-                    {
-                        return false;
+            // Check # of edges
+            let mut total = 0;
+            for u in 0..self.size {
+                for v in 0..self.size {
+                    if self.fwd_edges[u][v] {
+                        total += 1;
                     }
                 }
             }
+            assert_eq!(total, self.num_edges);
+            // Check edges satisfy reflexivity
+            for u in 0..self.size {
+                assert!(self.contains_edge(u, u));
+            }
+            // Check edges satisfy transitivity
+            for u in 0..self.size {
+                for v in self.targets(u) {
+                    for w in self.targets(v) {
+                        assert!(self.contains_edge(u, w));
+                    }
+                }
+            }
+            // OK
             true
         }
         fn assert_invariant(&self) {
             // No-op in release mode
-            debug_assert!(self.invariant());
+            debug_assert!(self.assert_invariant_core());
         }
 
-        /* Constructor */
-        pub fn new_unordered(size: Ele) -> Self {
-            let mut edges = HashSet::new();
+        /* Constructors */
+        pub fn new_unordered(size: usize) -> Self {
+            let fwd_edges = [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE];
+            let bck_edges = [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE];
+            let mut result = Self { size, fwd_edges, bck_edges, num_edges: 0 };
             for e in 0..size {
-                edges.insert((e, e));
+                result.add_edge_core(e, e);
             }
-            let result = Self { size, edges };
             result.assert_invariant();
             result
         }
@@ -84,46 +155,55 @@ mod poset {
             Self::new_unordered(0)
         }
 
-        /* Primitive modifiers: tehse do NOT preserve the invariant */
-        fn increase_size_by_core(&mut self, size: Ele) {
+        /* Primitive modifiers: these do NOT preserve the invariant */
+        fn increase_size_by_core(&mut self, size: usize) {
             self.size += size;
+            if self.size > MAX_POSET_SIZE {
+                panic!(
+                    "Attempted to create poset with too many elements: {} (max {})",
+                    self.size,
+                    MAX_POSET_SIZE,
+                );
+            }
         }
-        fn add_edge_core(&mut self, e1: Ele, e2: Ele) {
-            self.edges.insert((e1, e2));
+        fn add_edge_core(&mut self, e1: usize, e2: usize) {
+            if !self.fwd_edges[e1][e2] {
+                self.fwd_edges[e1][e2] = true;
+                self.bck_edges[e2][e1] = true;
+                self.num_edges += 1;
+            }
         }
 
         /* High-level operations */
         // Add element(s) and enforce reflexivity
-        pub fn increase_size_by(&mut self, size: Ele) {
-            for e in self.size..(self.size + size) {
+        pub fn increase_size_by(&mut self, size: usize) {
+            self.increase_size_by_core(size);
+            for e in (self.size - size)..self.size {
                 self.add_edge_core(e, e);
             }
-            self.increase_size_by_core(size);
             self.assert_invariant();
         }
         // Add an ordering and enforce transitivity
-        pub fn add_edge(&mut self, e1: Ele, e2: Ele) {
+        pub fn add_edge(&mut self, e1: usize, e2: usize) {
             assert!(e1 != e2 && e1 < self.size && e2 < self.size);
-            assert!(!self.edges.contains(&(e2, e1)));
-            let old_edges = self.edges.clone();
-            self.add_edge_core(e1, e2);
-            for edge1 in &old_edges {
-                if edge1.1 == e1 {
-                    for edge2 in &old_edges {
-                        if edge2.0 == e2 {
-                            self.add_edge_core(edge1.0, edge2.1);
-                        }
-                    }
+            assert!(!self.contains_edge(e2, e1));
+            for e0 in self.sources(e1) {
+                for e3 in self.targets(e2) {
+                    self.add_edge_core(e0, e3);
                 }
             }
+            // The following is unnecessary but sound to add
+            // self.add_edge_core(e1, e2);
             self.assert_invariant();
         }
         // Disjoint union of two posets
         #[allow(dead_code)]
         pub fn union(&mut self, other: &Self) {
             self.increase_size_by_core(other.size);
-            for (e1, e2) in &other.edges {
-                self.add_edge_core(self.size + e1, self.size + e2);
+            for e1 in 0..other.size {
+                for e2 in other.targets(e1) {
+                    self.add_edge_core(self.size + e1, self.size + e2);
+                }
             }
             self.assert_invariant();
         }
@@ -137,8 +217,8 @@ mod poset {
                     for f1 in 0..(self.size) {
                         let e2 = inj[e1];
                         let f2 = inj[f1];
-                        if self.edges.contains(&(e1, f1))
-                            != other.edges.contains(&(e2, f2))
+                        if self.contains_edge(e1, f1)
+                            != other.contains_edge(e2, f2)
                         {
                             skip = true;
                             break;
@@ -157,21 +237,21 @@ mod poset {
         }
         // Check if two posets are isomorphic
         pub fn isomorphic(&self, other: &Self) -> bool {
-            self.size == other.size
-                && self.edges.len() == other.edges.len()
+            self.get_size() == other.get_size()
+                && self.get_num_edges() == other.get_num_edges()
                 && self.embeds_in(other)
         }
     }
 }
 
-use poset::{Ele, Poset};
+use poset::Poset;
 
 /*
     Some useful utility enumerators, before we enumerate posets
 */
 
 // Enumerate all subsets of 0..size
-fn enumerate_subsets(size: Ele) -> Vec<Vec<Ele>> {
+fn enumerate_subsets(size: usize) -> Vec<Vec<usize>> {
     if size == 0 {
         vec![Vec::new()]
     } else {
@@ -186,7 +266,7 @@ fn enumerate_subsets(size: Ele) -> Vec<Vec<Ele>> {
 }
 
 // Enumerate all partitions of size into parts parts
-fn enumerate_partitions(size: Ele) -> Vec<Vec<Ele>> {
+fn enumerate_partitions(size: usize) -> Vec<Vec<usize>> {
     if size == 0 {
         vec![Vec::new()]
     } else {
@@ -202,7 +282,7 @@ fn enumerate_partitions(size: Ele) -> Vec<Vec<Ele>> {
 }
 
 // Enumerate all injections from 0..isize -> 0..osize
-fn enumerate_injections(isize: Ele, osize: Ele) -> Vec<Vec<Ele>> {
+fn enumerate_injections(isize: usize, osize: usize) -> Vec<Vec<usize>> {
     if isize == 0 {
         return vec![vec![]];
     } else if osize == 0 {
@@ -227,7 +307,7 @@ fn enumerate_injections(isize: Ele, osize: Ele) -> Vec<Vec<Ele>> {
 }
 // Enumerate all bijections from 0..size -> 0..size
 #[allow(dead_code)]
-fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
+fn enumerate_bijections(size: usize) -> Vec<Vec<usize>> {
     enumerate_injections(size, size)
 }
 
@@ -247,8 +327,8 @@ fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
 //   - the sum of these elements is total_size
 // Guarantee: at-least-once
 fn enumerate_posets_leveled_rec(
-    level_sizes: &mut Vec<Ele>,
-    total_size: Ele,
+    level_sizes: &mut Vec<usize>,
+    total_size: usize,
 ) -> Vec<Poset> {
     // println!("enumerate_posets_leveled_rec: {:?}, {}", level_sizes, total_size);
     let numlevels = level_sizes.len();
@@ -299,7 +379,7 @@ fn enumerate_posets_leveled_rec(
     }
 }
 // Unlike the _rec version, this one provides an exactly-once guarantee
-fn enumerate_posets_leveled(level_sizes: &mut Vec<Ele>) -> Vec<Poset> {
+fn enumerate_posets_leveled(level_sizes: &mut Vec<usize>) -> Vec<Poset> {
     // println!("enumerate_posets_leveled: {:?}", level_sizes);
     let mut results = Vec::new();
     let posets =
@@ -322,7 +402,7 @@ fn enumerate_posets_leveled(level_sizes: &mut Vec<Ele>) -> Vec<Poset> {
 
 // Enumerate posets with size elements.
 // Guarantee: exactly-once
-fn enumerate_posets(size: Ele) -> Vec<Poset> {
+fn enumerate_posets(size: usize) -> Vec<Poset> {
     // println!("enumerate_posets: {:?}", size);
     if size == 0 {
         vec![Poset::new_empty()]
@@ -351,8 +431,8 @@ fn enumerate_posets(size: Ele) -> Vec<Poset> {
 // search optimizations.
 // This is a super gnarly function and should be rewritten...
 fn enumerate_candidate_universal_posets(
-    base_size: Ele,
-    universal_size: Ele,
+    base_size: usize,
+    universal_size: usize,
 ) -> Vec<Poset> {
     // let min_size = if base_size == 0 { 0 } else { base_size * 2 - 1 };
     let min_size = base_size;
@@ -428,7 +508,7 @@ fn enumerate_candidate_universal_posets(
 /*
     Solve the universal poset problem
 */
-fn solve_universal_poset(base_size: Ele) -> Ele {
+fn solve_universal_poset(base_size: usize) -> usize {
     let base_posets = enumerate_posets(base_size);
     // println!("Enumerated {} posets of size {}", base_posets.len(), base_size);
     for universal_size in base_size.. {
@@ -492,8 +572,8 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
-    const TEST_UPTO_BIG: Ele = 10;
-    const TEST_UPTO_SMALL: Ele = 5;
+    const TEST_UPTO_BIG: usize = 10;
+    const TEST_UPTO_SMALL: usize = 5;
 
     #[test]
     fn test_unordered_poset() {
@@ -585,7 +665,7 @@ mod tests {
     fn test_enumerate_injections() {
         assert_eq!(enumerate_injections(0, 1), vec![vec![],]);
         assert_eq!(enumerate_injections(1, 2), vec![vec![0], vec![1],]);
-        assert_eq!(enumerate_injections(2, 1), vec![] as Vec<Vec<Ele>>);
+        assert_eq!(enumerate_injections(2, 1), vec![] as Vec<Vec<usize>>);
         assert_eq!(
             enumerate_injections(2, 3),
             vec![
