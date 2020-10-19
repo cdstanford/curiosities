@@ -25,10 +25,20 @@ mod poset {
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct Poset {
-        pub size: Ele,
-        pub edges: HashSet<(Ele, Ele)>,
+        size: Ele,
+        edges: HashSet<(Ele, Ele)>,
     }
     impl Poset {
+        /* Getters */
+        pub fn get_size(&self) -> Ele {
+            self.size
+        }
+        pub fn get_num_edges(&self) -> Ele {
+            self.edges.len()
+        }
+        pub fn contains_edge(&self, u: Ele, v: Ele) -> bool {
+            self.edges.contains(&(u, v))
+        }
         /* Object Invariant */
         fn invariant(&self) -> bool {
             // Check elements are in range
@@ -387,7 +397,7 @@ fn enumerate_candidate_universal_posets(
                         let mut cycle = false;
                         for &ele1 in &subset1 {
                             for &ele2 in &subset2 {
-                                if poset.edges.contains(&(ele2, ele1)) {
+                                if poset.contains_edge(ele2, ele1) {
                                     cycle = true;
                                     break;
                                 }
@@ -489,8 +499,8 @@ mod tests {
     fn test_unordered_poset() {
         for n in 0..TEST_UPTO_BIG {
             let simple = Poset::new_unordered(n);
-            assert_eq!(simple.size, n);
-            assert_eq!(simple.edges.len(), n);
+            assert_eq!(simple.get_size(), n);
+            assert_eq!(simple.get_num_edges(), n);
         }
     }
     #[test]
@@ -500,8 +510,8 @@ mod tests {
             for i in 1..n {
                 line.add_edge(i - 1, i)
             }
-            assert_eq!(line.size, n);
-            assert_eq!(line.edges.len(), n * (n + 1) / 2)
+            assert_eq!(line.get_size(), n);
+            assert_eq!(line.get_num_edges(), n * (n + 1) / 2)
         }
     }
     #[test]
@@ -640,8 +650,8 @@ mod tests {
             let num_edges = n * (n + 1) / 2;
             let posets = enumerate_candidate_universal_posets(n, min_size);
             assert_eq!(posets.len(), 1);
-            assert_eq!(posets[0].size, min_size);
-            assert_eq!(posets[0].edges.len(), num_edges);
+            assert_eq!(posets[0].get_size(), min_size);
+            assert_eq!(posets[0].get_num_edges(), num_edges);
         }
     }
     #[test]
