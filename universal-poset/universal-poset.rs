@@ -123,45 +123,154 @@ mod poset {
 use poset::{Ele, Poset};
 
 /*
+    Some useful utility enumerators, before we enumerate posets
+*/
+
+// Enumerate all subsets of 0..size
+fn enumerate_subsets(size: Ele) -> Vec<Vec<Ele>> {
+    if size == 0 {
+        vec![Vec::new()]
+    } else {
+        let mut results = Vec::new();
+        for mut subset in enumerate_subsets(size - 1).drain(..) {
+            results.push(subset.clone());
+            subset.push(size - 1);
+            results.push(subset);
+        }
+        results
+    }
+}
+
+// Enumerate all partitions of size into parts parts
+fn enumerate_partitions(size: Ele) -> Vec<Vec<Ele>> {
+    if size == 0 {
+        vec![Vec::new()]
+    } else {
+        let mut results = Vec::new();
+        for last_ele in 1..(size + 1) {
+            for mut subset in enumerate_partitions(size - last_ele).drain(..) {
+                subset.push(last_ele);
+                results.push(subset);
+            }
+        }
+        results
+    }
+}
+
+// Enumerate all injections from 0..isize -> 0..osize
+fn enumerate_injections(isize: Ele, osize: Ele) -> Vec<Vec<Ele>> {
+    if isize == 0 {
+        return vec![vec![]];
+    } else if osize == 0 {
+        return vec![];
+    }
+    let mut results = Vec::new();
+    let smaller_injections = enumerate_injections(isize - 1, osize - 1);
+    for i in 0..osize {
+        // Element isize-1 maps to i
+        for mut inj in smaller_injections.clone().drain(..) {
+            assert_eq!(inj.len(), isize - 1);
+            for item in inj.iter_mut() {
+                if *item >= i {
+                    *item += 1;
+                }
+            }
+            inj.push(i);
+            results.push(inj);
+        }
+    }
+    results
+}
+// Enumerate all bijections from 0..size -> 0..size
+#[allow(dead_code)]
+fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
+    enumerate_injections(size, size)
+}
+
+/*
     Enumerators for posets, up to isomorphism.
 
     These enumerators provide an at-least-once guarantee but
     do not guarantee that some posets will not be produced multiple times.
 */
-// Enumerate all subsets of 0..size
-fn enumerate_subsets(size: Ele) -> Vec<Vec<Ele>> {
-    if size == 0 {
-        return vec![Vec::new()];
+
+// Enumerate posets given a list of the number of elements at each level
+// Each element at level 1 must be greater than at least one element at level 0,
+// and so on.
+// Precondition:
+//   - each element of level_sizes is nonzero
+//   - the sum of these elements is total_size
+fn enumerate_posets_leveled(
+    level_sizes: &mut Vec<Ele>,
+    total_size: Ele,
+) -> Vec<Poset> {
+    let numlevels = level_sizes.len();
+    if numlevels == 0 {
+        vec![Poset::new_empty()]
+    } else if numlevels == 1 {
+        debug_assert!(level_sizes[0] == total_size);
+        vec![Poset::new_unordered(total_size)]
+    } else {
+        // Recurse then re-push top level to the level_sizes
+        let prev_size = total_size - level_sizes[numlevels - 1];
+        let prevprev_size = prev_size - level_sizes[numlevels - 2];
+        let tmp = level_sizes.pop().unwrap();
+        let mut subposets = enumerate_posets_leveled(level_sizes, prev_size);
+        level_sizes.push(tmp);
+        // Make a list of all subsets of the previous levels that have at
+        // least one element in the top level
+        let mut subsets = enumerate_subsets(prev_size);
+        let mut good_subsets = Vec::new();
+        for subset in subsets.drain(..) {
+            if !subset.is_empty() && subset[subset.len() - 1] >= prevprev_size {
+                good_subsets.push(subset);
+            }
+        }
+        // For all prev posets, add elements dependent on the good subsets
+        let mut results = Vec::new();
+        for mut poset in subposets.drain(..) {
+            poset.increase_size_by(total_size - prev_size);
+            for ele in prev_size..total_size {
+                for subset in &good_subsets {
+                    let mut result = poset.clone();
+                    for &prev_ele in subset {
+                        result.add_edge(prev_ele, ele);
+                    }
+                    results.push(result);
+                }
+            }
+        }
+        results
     }
-    let mut result = Vec::new();
-    for mut subset in enumerate_subsets(size - 1).drain(..) {
-        result.push(subset.clone());
-        subset.push(size - 1);
-        result.push(subset);
-    }
-    result
 }
+
 // Enumerate posets with size elements
 fn enumerate_posets(size: Ele) -> Vec<Poset> {
-    let mut result = Vec::new();
-    // Base case
     if size == 0 {
-        result.push(Poset::new_empty());
-        return result;
-    }
-    // Strategy: enumerate posets of size size-1, then add a maximal element.
-    let mut smaller_subsets = enumerate_subsets(size - 1);
-    let smaller_posets = enumerate_posets(size - 1);
-    for mut subset in smaller_subsets.drain(..) {
-        for mut poset in smaller_posets.clone().drain(..) {
-            poset.increase_size_by(1);
-            for ele in subset.drain(..) {
-                poset.add_edge(ele, size - 1);
+        vec![Poset::new_empty()]
+    } else {
+        let mut result = Vec::new();
+        for mut partition in enumerate_partitions(size).drain(..) {
+            let mut posets = enumerate_posets_leveled(&mut partition, size);
+            for poset in posets.drain(..) {
+                result.push(poset);
             }
-            result.push(poset);
         }
+        result
     }
-    result
+    // // Old strategy: enumerate posets of size size-1, then add a maximal element.
+    // let mut smaller_subsets = enumerate_subsets(size - 1);
+    // let smaller_posets = enumerate_posets(size - 1);
+    // for mut subset in smaller_subsets.drain(..) {
+    //     for mut poset in smaller_posets.clone().drain(..) {
+    //         poset.increase_size_by(1);
+    //         for ele in subset.drain(..) {
+    //             poset.add_edge(ele, size - 1);
+    //         }
+    //         result.push(poset);
+    //     }
+    // }
+    // result
 }
 // Enumerate all candidates for a universal poset, using a few simple
 // search optimizations.
@@ -239,35 +348,6 @@ fn enumerate_candidate_universal_posets(
             result
         }
     }
-}
-// Enumerate all injections from 0..isize -> 0..osize
-fn enumerate_injections(isize: Ele, osize: Ele) -> Vec<Vec<Ele>> {
-    if isize == 0 {
-        return vec![vec![]];
-    } else if osize == 0 {
-        return vec![];
-    }
-    let mut results = Vec::new();
-    let smaller_injections = enumerate_injections(isize - 1, osize - 1);
-    for i in 0..osize {
-        // Element isize-1 maps to i
-        for mut inj in smaller_injections.clone().drain(..) {
-            assert_eq!(inj.len(), isize - 1);
-            for item in inj.iter_mut() {
-                if *item >= i {
-                    *item += 1;
-                }
-            }
-            inj.push(i);
-            results.push(inj);
-        }
-    }
-    results
-}
-// Enumerate all bijections from 0..size -> 0..size
-#[allow(dead_code)]
-fn enumerate_bijections(size: Ele) -> Vec<Vec<Ele>> {
-    enumerate_injections(size, size)
 }
 
 /*
@@ -417,27 +497,14 @@ mod tests {
     }
 
     #[test]
-    fn test_enumerate_universal_posets_min_size() {
-        for n in 0..TEST_UPTO {
-            // Old way of enumerating candidate posets
-            // let min_size = if n == 0 { 0 } else { 2 * n - 1 };
-            let min_size = n;
-            let num_edges = n * (n + 1) / 2;
-            let posets = enumerate_candidate_universal_posets(n, min_size);
-            assert_eq!(posets.len(), 1);
-            assert_eq!(posets[0].size, min_size);
-            assert_eq!(posets[0].edges.len(), num_edges);
-        }
-    }
-    #[test]
-    fn test_enumerate_universal_posets_too_small() {
-        for n in 1..TEST_UPTO {
-            // Old way of enumerating candidate posets
-            // let too_small = 2 * n - 2;
-            let too_small = n - 1;
-            let posets = enumerate_candidate_universal_posets(n, too_small);
-            assert_eq!(posets.len(), 0);
-        }
+    fn test_enumerate_partitions() {
+        assert_eq!(enumerate_partitions(0), vec![vec![],]);
+        assert_eq!(enumerate_partitions(1), vec![vec![1],]);
+        assert_eq!(enumerate_partitions(2), vec![vec![1, 1], vec![2],]);
+        assert_eq!(
+            enumerate_partitions(3),
+            vec![vec![1, 1, 1], vec![2, 1], vec![1, 2], vec![3],]
+        );
     }
 
     #[test]
@@ -474,6 +541,30 @@ mod tests {
                 vec![1, 2],
             ]
         );
+    }
+
+    #[test]
+    fn test_enumerate_universal_posets_min_size() {
+        for n in 0..TEST_UPTO {
+            // Old way of enumerating candidate posets
+            // let min_size = if n == 0 { 0 } else { 2 * n - 1 };
+            let min_size = n;
+            let num_edges = n * (n + 1) / 2;
+            let posets = enumerate_candidate_universal_posets(n, min_size);
+            assert_eq!(posets.len(), 1);
+            assert_eq!(posets[0].size, min_size);
+            assert_eq!(posets[0].edges.len(), num_edges);
+        }
+    }
+    #[test]
+    fn test_enumerate_universal_posets_too_small() {
+        for n in 1..TEST_UPTO {
+            // Old way of enumerating candidate posets
+            // let too_small = 2 * n - 2;
+            let too_small = n - 1;
+            let posets = enumerate_candidate_universal_posets(n, too_small);
+            assert_eq!(posets.len(), 0);
+        }
     }
 
     #[test]
