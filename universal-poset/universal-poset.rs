@@ -240,7 +240,7 @@ fn enumerate_posets_leveled_rec(
     level_sizes: &mut Vec<Ele>,
     total_size: Ele,
 ) -> Vec<Poset> {
-    // println!("DEBUG: {:?}, {}", level_sizes, total_size);
+    // println!("enumerate_posets_leveled_rec: {:?}, {}", level_sizes, total_size);
     let numlevels = level_sizes.len();
     if numlevels == 0 {
         vec![Poset::new_empty()]
@@ -290,6 +290,7 @@ fn enumerate_posets_leveled_rec(
 }
 // Unlike the _rec version, this one provides an exactly-once guarantee
 fn enumerate_posets_leveled(level_sizes: &mut Vec<Ele>) -> Vec<Poset> {
+    // println!("enumerate_posets_leveled: {:?}", level_sizes);
     let mut results = Vec::new();
     let posets =
         enumerate_posets_leveled_rec(level_sizes, level_sizes.iter().sum());
@@ -312,6 +313,7 @@ fn enumerate_posets_leveled(level_sizes: &mut Vec<Ele>) -> Vec<Poset> {
 // Enumerate posets with size elements.
 // Guarantee: exactly-once
 fn enumerate_posets(size: Ele) -> Vec<Poset> {
+    // println!("enumerate_posets: {:?}", size);
     if size == 0 {
         vec![Poset::new_empty()]
     } else {
@@ -418,7 +420,7 @@ fn enumerate_candidate_universal_posets(
 */
 fn solve_universal_poset(base_size: Ele) -> Ele {
     let base_posets = enumerate_posets(base_size);
-    println!("Enumerated {} posets of size {}", base_posets.len(), base_size);
+    // println!("Enumerated {} posets of size {}", base_posets.len(), base_size);
     for universal_size in base_size.. {
         let mut candidates =
             enumerate_candidate_universal_posets(base_size, universal_size);
@@ -455,6 +457,11 @@ fn solve_universal_poset(base_size: Ele) -> Ele {
     Entrypoint
 */
 fn main() {
+    println!("====== Number of Posets ======");
+    for n in 0..7 {
+        let posets = enumerate_posets(n);
+        println!("{}: {}", n, posets.len());
+    }
     println!("====== Universal Poset Problem Solution ======");
     let mut results = Vec::new();
     for n in 0..10 {
