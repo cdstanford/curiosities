@@ -22,18 +22,14 @@ use std::vec::Vec;
     a type parameter.)
     We store both forward and backward edges (two 2D arrays).
 
-    TODO: Implement an additional representation with smart isomorphism checking.
-    See the following:
-
-    The main goal of this implementation is to efficiently support comparing
+    Posets additionally store an additional list of levels, where for each i,
+    the elements at "level" i are defined to be the minimal elements that
+    are not at level i-1.
+    The main goal of the levels is to efficiently support comparing
     two posets for isomorphism, as that is a common operation in solving the
     problem. The bottleneck is when the two posets are actually isomorphic,
     so efficient non-isomorphism checking is not so important as efficiently
     finding a witnessing isomorphism.
-
-    Posets therefore store a list of sizes, where each size is
-    the number of posets at that level. For each i, the elements at "level" i are
-    defined to be the minimal elements that are not at level i-1.
 */
 
 mod poset {
@@ -47,8 +43,10 @@ mod poset {
         num_edges: usize,
         fwd_edges: [[bool; MAX_POSET_SIZE]; MAX_POSET_SIZE],
         bck_edges: [[bool; MAX_POSET_SIZE]; MAX_POSET_SIZE],
-        // TODO:
-        // level_sizes: Vec<usize>,
+        // Elements sorted into levels for faster isomorphism checking
+        num_levels: usize,
+        elem_levels: [usize; MAX_POSET_SIZE], // element -> level
+        level_elems: [Vec<usize>; MAX_POSET_SIZE], // level -> elements
     }
     impl fmt::Debug for Poset {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -89,6 +87,25 @@ mod poset {
                 }
             }
             results
+        }
+        pub fn get_num_levels(&self) -> usize {
+            self.num_levels
+        }
+        pub fn get_elem_level(&self, u: usize) -> usize {
+            self.elem_levels[u]
+        }
+        pub fn get_level_size(&self, k: usize) -> usize {
+            self.level_elems[k].len()
+        }
+        pub fn get_level_elems(&self, k: usize) -> &[usize] {
+            &(self.level_elems[k])
+        }
+        pub fn get_level_sizes(&self) -> Vec<usize> {
+            let mut result = Vec::new();
+            for k in 0..self.num_levels {
+                result.push(self.get_level_size(k));
+            }
+            result
         }
 
         /* Object Invariant */
@@ -132,6 +149,38 @@ mod poset {
                     }
                 }
             }
+            // Check level maps basic structure
+            for u in 0..self.size {
+                let level = self.elem_levels[u];
+                assert!(self.level_elems[level].contains(&u));
+            }
+            assert_eq!(
+                (0..MAX_POSET_SIZE)
+                    .map(|k| self.get_level_size(k))
+                    .sum::<usize>(),
+                self.get_size()
+            );
+            for k in 0..MAX_POSET_SIZE {
+                if k + 1 == self.num_levels {
+                    assert!(self.get_level_size(k) > 0);
+                } else if k >= self.num_levels {
+                    assert!(self.get_level_size(k) == 0);
+                }
+            }
+            // Check that level assignments are correct
+            for u in 0..self.size {
+                let max_level: Option<usize> = self
+                    .sources(u)
+                    .iter()
+                    .filter(|&&s| s != u)
+                    .map(|&s| self.get_elem_level(s))
+                    .max();
+                let expected_level: usize = match max_level {
+                    Some(k) => k + 1,
+                    None => 0,
+                };
+                assert_eq!(self.get_elem_level(u), expected_level);
+            }
             // OK
             true
         }
@@ -142,9 +191,16 @@ mod poset {
 
         /* Constructors */
         pub fn new_unordered(size: usize) -> Self {
-            let fwd_edges = [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE];
-            let bck_edges = [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE];
-            let mut result = Self { size, fwd_edges, bck_edges, num_edges: 0 };
+            let mut result = Self {
+                size,
+                fwd_edges: [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE],
+                bck_edges: [[false; MAX_POSET_SIZE]; MAX_POSET_SIZE],
+                num_edges: 0,
+                num_levels: if size > 0 { 1 } else { 0 },
+                elem_levels: [0; MAX_POSET_SIZE],
+                level_elems: Default::default(),
+            };
+            result.level_elems[0] = (0..size).collect();
             for e in 0..size {
                 result.add_edge_core(e, e);
             }
@@ -173,6 +229,43 @@ mod poset {
                 self.num_edges += 1;
             }
         }
+        fn ensure_level_core(&mut self, k: usize) {
+            debug_assert!(k < MAX_POSET_SIZE);
+            if self.num_levels <= k {
+                self.num_levels = k + 1;
+            }
+        }
+        fn remove_elem_level_core(&mut self, e: usize) {
+            let level = self.get_elem_level(e);
+            let index = self
+                .get_level_elems(level)
+                .iter()
+                .position(|&x| x == e)
+                .unwrap();
+            self.level_elems[level].swap_remove(index);
+        }
+        fn add_elem_level_core(&mut self, e: usize, k: usize) {
+            self.ensure_level_core(k);
+            self.elem_levels[e] = k;
+            self.level_elems[k].push(e);
+        }
+        fn add_elem_level_0_core(&mut self, e: usize) {
+            self.add_elem_level_core(e, 0);
+        }
+        fn change_level_core(&mut self, e: usize, k: usize) {
+            self.remove_elem_level_core(e);
+            self.add_elem_level_core(e, k);
+        }
+        fn increase_level_rec(&mut self, e: usize, k: usize) {
+            if k > self.get_elem_level(e) {
+                self.change_level_core(e, k);
+                for f in self.targets(e) {
+                    if f != e {
+                        self.increase_level_rec(f, k + 1);
+                    }
+                }
+            }
+        }
 
         /* High-level operations */
         // Add element(s) and enforce reflexivity
@@ -180,6 +273,7 @@ mod poset {
             self.increase_size_by_core(size);
             for e in (self.size - size)..self.size {
                 self.add_edge_core(e, e);
+                self.add_elem_level_0_core(e);
             }
             self.assert_invariant();
         }
@@ -187,59 +281,107 @@ mod poset {
         pub fn add_edge(&mut self, e1: usize, e2: usize) {
             assert!(e1 != e2 && e1 < self.size && e2 < self.size);
             assert!(!self.contains_edge(e2, e1));
+            // Increase level if necessary
+            self.increase_level_rec(e2, self.get_elem_level(e1) + 1);
+            // Add edges for transitive closure
+            // (Note that the following includes self.add_edge_core(e1, e2))
             for e0 in self.sources(e1) {
                 for e3 in self.targets(e2) {
                     self.add_edge_core(e0, e3);
                 }
             }
-            // The following is unnecessary but sound to add
-            // self.add_edge_core(e1, e2);
+            // Done
             self.assert_invariant();
         }
         // Disjoint union of two posets
         #[allow(dead_code)]
         pub fn union(&mut self, other: &Self) {
-            self.increase_size_by_core(other.size);
+            self.increase_size_by(other.size);
             for e1 in 0..other.size {
                 for e2 in other.targets(e1) {
-                    self.add_edge_core(self.size + e1, self.size + e2);
+                    self.add_edge(self.size + e1, self.size + e2);
                 }
             }
             self.assert_invariant();
         }
         // Check if one poset contains another
+        fn is_embedding(&self, other: &Self, inj: &[usize]) -> bool {
+            for e1 in 0..(self.size) {
+                for f1 in 0..(self.size) {
+                    let e2 = inj[e1];
+                    let f2 = inj[f1];
+                    if self.contains_edge(e1, f1) != other.contains_edge(e2, f2)
+                    {
+                        return false;
+                    }
+                }
+            }
+            true
+        }
         pub fn embeds_in(&self, other: &Self) -> bool {
             use crate::enumerate_injections;
             let mut injections = enumerate_injections(self.size, other.size);
             for inj in injections.drain(..) {
-                let mut skip = false;
-                for e1 in 0..(self.size) {
-                    for f1 in 0..(self.size) {
-                        let e2 = inj[e1];
-                        let f2 = inj[f1];
-                        if self.contains_edge(e1, f1)
-                            != other.contains_edge(e2, f2)
-                        {
-                            skip = true;
-                            break;
-                        }
-                    }
-                    if skip {
-                        break;
-                    }
-                }
-                if !skip {
-                    // This injection works
+                if self.is_embedding(other, &inj) {
                     return true;
                 }
             }
+            // No injection works
             false
         }
         // Check if two posets are isomorphic
+        fn is_leveled_isomorphism(
+            &self,
+            other: &Self,
+            level_sizes: &[usize],
+            bij_list: &[Vec<usize>],
+        ) -> bool {
+            debug_assert_eq!(self.get_level_sizes(), level_sizes);
+            debug_assert_eq!(other.get_level_sizes(), level_sizes);
+            for level_e in 0..self.num_levels {
+                for level_f in (level_e + 1)..self.num_levels {
+                    let level_size_e = level_sizes[level_e];
+                    let level_size_f = level_sizes[level_f];
+                    for i1 in 0..level_size_e {
+                        for j1 in 0..level_size_f {
+                            let i2 = bij_list[level_e][i1];
+                            let j2 = bij_list[level_f][j1];
+                            let e1 = self.level_elems[level_e][i1];
+                            let f1 = self.level_elems[level_f][j1];
+                            let e2 = other.level_elems[level_e][i2];
+                            let f2 = other.level_elems[level_f][j2];
+                            if self.contains_edge(e1, f1)
+                                != other.contains_edge(e2, f2)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            true
+        }
         pub fn isomorphic(&self, other: &Self) -> bool {
-            self.get_size() == other.get_size()
+            use crate::enumerate_bijection_lists;
+            if self.get_size() == other.get_size()
                 && self.get_num_edges() == other.get_num_edges()
-                && self.embeds_in(other)
+                && self.get_num_levels() == other.get_num_levels()
+                && self.get_level_sizes() == other.get_level_sizes()
+            {
+                let level_sizes = self.get_level_sizes();
+                let mut bijection_lists =
+                    enumerate_bijection_lists(level_sizes.clone());
+                for bij_list in bijection_lists.drain(..) {
+                    if self.is_leveled_isomorphism(
+                        other,
+                        &level_sizes,
+                        &bij_list,
+                    ) {
+                        return true;
+                    }
+                }
+            };
+            false
         }
     }
 }
@@ -306,9 +448,29 @@ fn enumerate_injections(isize: usize, osize: usize) -> Vec<Vec<usize>> {
     results
 }
 // Enumerate all bijections from 0..size -> 0..size
-#[allow(dead_code)]
 fn enumerate_bijections(size: usize) -> Vec<Vec<usize>> {
     enumerate_injections(size, size)
+}
+// Enumerate all lists of bijections of the given sizes.
+// E.g., on input [3, 2], enumerate all pairs of a bijection of size 3
+// and a bijection of size 2.
+fn enumerate_bijection_lists(mut sizes: Vec<usize>) -> Vec<Vec<Vec<usize>>> {
+    match sizes.pop() {
+        None => vec![vec![]],
+        Some(last_size) => {
+            let sub_bij_lists = enumerate_bijection_lists(sizes);
+            let bijs = enumerate_bijections(last_size);
+            let mut results = Vec::new();
+            for sub_bij_list in &sub_bij_lists {
+                for bij in &bijs {
+                    let mut bij_list = sub_bij_list.clone();
+                    bij_list.push(bij.clone());
+                    results.push(bij_list);
+                }
+            }
+            results
+        }
+    }
 }
 
 /*
@@ -657,6 +819,46 @@ mod tests {
                 vec![0, 2, 1],
                 vec![1, 0, 2],
                 vec![0, 1, 2],
+            ]
+        );
+    }
+    #[test]
+    fn test_enumerate_bijection_lists() {
+        assert_eq!(
+            enumerate_bijection_lists(vec![]),
+            vec![vec![] as Vec<Vec<usize>>]
+        );
+        assert_eq!(enumerate_bijection_lists(vec![0]), vec![vec![vec![],],]);
+        assert_eq!(
+            enumerate_bijection_lists(vec![0, 0]),
+            vec![vec![vec![], vec![]],]
+        );
+        assert_eq!(
+            enumerate_bijection_lists(vec![1, 1]),
+            vec![vec![vec![0], vec![0]],]
+        );
+        assert_eq!(
+            enumerate_bijection_lists(vec![1, 0]),
+            vec![vec![vec![0], vec![]],]
+        );
+        assert_eq!(
+            enumerate_bijection_lists(vec![2, 1]),
+            vec![vec![vec![1, 0], vec![0]], vec![vec![0, 1], vec![0]],]
+        );
+        assert_eq!(
+            enumerate_bijection_lists(vec![1, 2, 0]),
+            vec![
+                vec![vec![0], vec![1, 0], vec![]],
+                vec![vec![0], vec![0, 1], vec![]],
+            ]
+        );
+        assert_eq!(
+            enumerate_bijection_lists(vec![2, 1, 2]),
+            vec![
+                vec![vec![1, 0], vec![0], vec![1, 0]],
+                vec![vec![1, 0], vec![0], vec![0, 1]],
+                vec![vec![0, 1], vec![0], vec![1, 0]],
+                vec![vec![0, 1], vec![0], vec![0, 1]],
             ]
         );
     }
