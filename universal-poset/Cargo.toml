@@ -11,3 +11,7 @@ edition = "2018"
 [[bin]]
 name = "universal-poset"
 path = "universal-poset.rs"
+
+# Uncomment for profiling
+# [profile.release]
+# debug = true
