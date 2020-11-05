@@ -1,0 +1,9 @@
+# Integer Circle Problem Solution (for N = 100, B1 = 30, B2 = 50)
+
+We claim it is not possible. In fact, the below works for N = 100, B1 = 26, B2 = 50, or in general for N = 4K, B1 = K + 1, B2 = 2K.
+
+**Lemma:** Consider any pair of adjacent numbers a, b in a hypothetical solution. We claim that at least one of them is between 26 and 75, inclusive. Suppose not. Then WLOG, either (1) a, b < 26, (2) a, b > 75, or (3) a < 26 and b > 75. In the first and second cases, the absolute difference between a and b is *at most* 24, which violates the constraint of being at least 30. In the third case, the difference between a and b is *at least* 76 - 25 = 51, which violates the constraint of being at most 50.
+
+So between every pair of adjacent integers around the circle, one of them lies in [26, 75]. But there are only 50 numbers in this interval, and 100 numbers total, so that means if we group the 100 numbers into 50 adjacent pairs, each pair must have exactly one value between [26, 75]. In particular, this means the circle must alternate between values outside of the interval, and values inside the interval. (If not, either there are two adjacent numbers a, b that lie outside of [26, 75], or there are two adjacent a, b, that are both in [26, 75]. In the former case we violate the lemma, and in the latter case there are only 48 values in [26, 75] left, and if we pair up all the other numbers there are 49 pairs, so not enough values to assign one value in [26, 75] to each pair.)
+
+Now that the circle alternates between values in the interval [26, 75] and outside of it, simply consider the number 26. It has two neighbors, both of which lie outside of the interval. In addition, both neighbors must have a difference with 26 between 30 and 50, which implies they are between 56 and 76, inclusive. The only number in [56, 76] outside of [26, 75] is 76, so 76 is the only possible neighbor of 26. But there must be two neighbors, contradiction.
