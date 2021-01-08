@@ -4,6 +4,10 @@ A triangle is an "almost right triangle" if one of its angles differs from
 triangle" if two of its angles differ from each other by at most 15
 degrees. Prove that all acute triangles are either almost right or almost
 isosceles.
+
+Note: if "at most 15" is replaced by "less than 15" in the problem statement
+(change "<= 15" to "< 15" everywhere below), the formula becomes satisfiable
+and we get the following counterexample: a triangle with angles 45, 60, and 75.
 """
 
 import z3
