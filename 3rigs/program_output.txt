@@ -1,0 +1,130 @@
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 1 1
+   2 1 2
+ *
+   0 0 0
+   0 1 2
+   0 2 0
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 1 1
+   2 1 2
+ *
+   0 0 0
+   0 1 2
+   0 2 2
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 1 2
+   2 2 2
+ *
+   0 0 0
+   0 1 2
+   0 2 2
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 2 0
+   2 0 1
+ *
+   0 0 0
+   0 1 2
+   0 2 1
+Skipped example: * not distributive over +
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 2 1
+   2 1 2
+ *
+   0 0 0
+   0 1 2
+   0 2 2
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: + not associative
+Skipped example: * not distributive over +
+Skipped example: * not distributive over +
+Found example:
+ +
+   0 1 2
+   1 2 2
+   2 2 2
+ *
+   0 0 0
+   0 1 2
+   0 2 2
+Total number of examples: 6
