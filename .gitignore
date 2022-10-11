@@ -6,3 +6,6 @@ debug/
 target/
 Cargo.lock
 **/*.rs.bk
+
+# Mac
+.DS_Store
