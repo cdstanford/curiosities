@@ -6,9 +6,10 @@ It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/p
 
 ### Languages
 
-Most solutions are written in Python 3. Some of these are proofs using the [Z3 Theorem prover](https://github.com/Z3Prover/z3). To run these, first install Z3 via `pip3 install z3-solver` or by following the instructions on that page.
-
-Besides Python 3, some solutions are in [Rust](https://www.rust-lang.org/) or [Alloy](https://alloytools.org/).
+Most solutions are written in Python 3 or Rust.
+Some are proofs using the [Z3 Theorem prover](https://github.com/Z3Prover/z3);
+to run these, first install Z3 via `pip3 install z3-solver` or by following the instructions on that page.
+There is also an [Alloy](https://alloytools.org/) solution.
 
 ### Basic Information
 
