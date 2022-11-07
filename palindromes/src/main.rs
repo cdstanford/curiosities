@@ -91,9 +91,32 @@ fn test_steps() {
     assert_eq!(steps(49), Some(2));
 }
 
+const RESULTS_UPTO: usize = 100;
+
 fn main() {
-    println!("Palindrome test");
+    println!("=== Palindrome test ===");
+    let mut results: Vec<Vec<UINT>> = vec![Vec::new(); RESULTS_UPTO];
+    let mut results_many = Vec::new();
+    let mut results_notfound = Vec::new();
     for n in 0..1000 {
-        steps(n);
+        match steps(n) {
+            Some(i) => {
+                let i = i as usize;
+                if i < RESULTS_UPTO {
+                    results[i].push(n);
+                } else {
+                    results_many.push(n);
+                }
+            }
+            None => results_notfound.push(n),
+        }
     }
+    println!("=== Results summary ===");
+    for i in 0..RESULTS_UPTO {
+        if !results[i].is_empty() {
+            println!("Reached a palindrome in {} steps: {:?}", i, results[i]);
+        }
+    }
+    println!("Reached a palindrome in {}+ steps: {:?}", RESULTS_UPTO, results_many);
+    println!("Palindrome not found: {:?}", results_notfound);
 }
