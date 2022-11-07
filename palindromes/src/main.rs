@@ -12,9 +12,9 @@
     143 + 341 = 484
 */
 
-type UINT = u128;
+type Uint = u128;
 
-fn reverse(n: UINT) -> Option<UINT> {
+fn reverse(n: Uint) -> Option<Uint> {
     // return None on overflow
     let rev_str: String = n.to_string().chars().rev().collect();
     rev_str.parse().ok()
@@ -30,7 +30,7 @@ fn test_reverse() {
     assert_eq!(reverse(47000), Some(74));
 }
 
-fn is_palindrome(n: UINT) -> bool {
+fn is_palindrome(n: Uint) -> bool {
     reverse(n) == Some(n)
 }
 
@@ -46,7 +46,7 @@ fn test_palindrome() {
     assert!(!is_palindrome(105601));
 }
 
-fn step(n: UINT) -> Option<UINT> {
+fn step(n: Uint) -> Option<Uint> {
     // return None on overflow
     n.checked_add(reverse(n)?)
 }
@@ -59,9 +59,9 @@ fn test_step() {
     assert_eq!(step(143), Some(484));
 }
 
-const MAX_STEPS: UINT = 1000;
+const MAX_STEPS: Uint = 1000;
 
-fn steps(n: UINT) -> Option<UINT> {
+fn steps(n: Uint) -> Option<Uint> {
     let mut count = 0;
     let mut n_mut = n;
     while !is_palindrome(n_mut) {
@@ -95,7 +95,7 @@ const RESULTS_UPTO: usize = 100;
 
 fn main() {
     println!("=== Palindrome test ===");
-    let mut results: Vec<Vec<UINT>> = vec![Vec::new(); RESULTS_UPTO];
+    let mut results: Vec<Vec<Uint>> = vec![Vec::new(); RESULTS_UPTO];
     let mut results_many = Vec::new();
     let mut results_notfound = Vec::new();
     for n in 0..1000 {
@@ -112,11 +112,14 @@ fn main() {
         }
     }
     println!("=== Results summary ===");
-    for i in 0..RESULTS_UPTO {
-        if !results[i].is_empty() {
-            println!("Reached a palindrome in {} steps: {:?}", i, results[i]);
+    for (i, results_i) in results.iter().enumerate() {
+        if !results_i.is_empty() {
+            println!("Reached a palindrome in {} steps: {:?}", i, results_i);
         }
     }
-    println!("Reached a palindrome in {}+ steps: {:?}", RESULTS_UPTO, results_many);
+    println!(
+        "Reached a palindrome in {}+ steps: {:?}",
+        RESULTS_UPTO, results_many
+    );
     println!("Palindrome not found: {:?}", results_notfound);
 }
