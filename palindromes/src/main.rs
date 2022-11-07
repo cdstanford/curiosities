@@ -1,4 +1,5 @@
 /*
+    Problem Statement:
     If you take a number and add the reverse of its digits in base 10,
     and then repeat this process, will this always eventually result in
     a palindrome?
@@ -58,15 +59,18 @@ fn test_step() {
 
 const MAX_STEPS: UINT = 1000;
 
-fn steps(mut n: UINT) -> Option<UINT> {
+fn steps(n: UINT) -> Option<UINT> {
     let mut count = 0;
-    while !is_palindrome(n) {
-        n = step(n);
+    let mut n_mut = n;
+    while !is_palindrome(n_mut) {
+        n_mut = step(n_mut);
         count += 1;
         if count >= MAX_STEPS {
+            println!("not found: {} -> ? (tried {} steps)", n, count);
             return None;
         }
     }
+    println!("palindrome found: {} -> {} ({} steps)", n, n_mut, count);
     Some(count)
 }
 
@@ -77,16 +81,9 @@ fn test_steps() {
     assert_eq!(steps(49), Some(2));
 }
 
-fn display_steps(n: UINT) -> String {
-    match steps(n) {
-        Some(m) => format!("{n}: {m} steps"),
-        None => format!("{n}: not found (tried {MAX_STEPS})"),
-    }
-}
-
 fn main() {
     println!("Palindrome test");
-    for n in 0.. {
-        println!("{}", display_steps(n));
+    for n in 0..1000 {
+        steps(n);
     }
 }
