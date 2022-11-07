@@ -10,6 +10,9 @@
 
     49 + 94 = 143
     143 + 341 = 484
+
+    Note:
+    should have written this in Python for easier access to bigints
 */
 
 type Uint = u128;
