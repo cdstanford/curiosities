@@ -14,23 +14,24 @@
 
 type UINT = u128;
 
-fn reverse(n: UINT) -> UINT {
+fn reverse(n: UINT) -> Option<UINT> {
+    // return None on overflow
     let rev_str: String = n.to_string().chars().rev().collect();
-    rev_str.parse().unwrap()
+    rev_str.parse().ok()
 }
 
 #[test]
 fn test_reverse() {
-    assert_eq!(reverse(0), 0);
-    assert_eq!(reverse(7), 7);
-    assert_eq!(reverse(10), 1);
-    assert_eq!(reverse(372), 273);
-    assert_eq!(reverse(101), 101);
-    assert_eq!(reverse(47000), 74);
+    assert_eq!(reverse(0), Some(0));
+    assert_eq!(reverse(7), Some(7));
+    assert_eq!(reverse(10), Some(1));
+    assert_eq!(reverse(372), Some(273));
+    assert_eq!(reverse(101), Some(101));
+    assert_eq!(reverse(47000), Some(74));
 }
 
 fn is_palindrome(n: UINT) -> bool {
-    n == reverse(n)
+    reverse(n) == Some(n)
 }
 
 #[test]
@@ -45,16 +46,17 @@ fn test_palindrome() {
     assert!(!is_palindrome(105601));
 }
 
-fn step(n: UINT) -> UINT {
-    n + reverse(n)
+fn step(n: UINT) -> Option<UINT> {
+    // return None on overflow
+    n.checked_add(reverse(n)?)
 }
 
 #[test]
 fn test_step() {
-    assert_eq!(step(1), 2);
-    assert_eq!(step(17), 88);
-    assert_eq!(step(49), 143);
-    assert_eq!(step(143), 484);
+    assert_eq!(step(1), Some(2));
+    assert_eq!(step(17), Some(88));
+    assert_eq!(step(49), Some(143));
+    assert_eq!(step(143), Some(484));
 }
 
 const MAX_STEPS: UINT = 1000;
@@ -63,8 +65,16 @@ fn steps(n: UINT) -> Option<UINT> {
     let mut count = 0;
     let mut n_mut = n;
     while !is_palindrome(n_mut) {
-        n_mut = step(n_mut);
         count += 1;
+        match step(n_mut) {
+            Some(n_new) => {
+                n_mut = n_new;
+            }
+            None => {
+                println!("integer overflow: {} -> ? (tried {} steps)", n, count);
+                return None;
+            }
+        }
         if count >= MAX_STEPS {
             println!("not found: {} -> ? (tried {} steps)", n, count);
             return None;
