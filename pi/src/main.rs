@@ -31,7 +31,7 @@ fn min_int(pred: impl Fn(usize) -> bool) -> usize {
 }
 #[test]
 fn test_min_int() {
-    assert_eq!(min_int(|x| true), 0);
+    assert_eq!(min_int(|_| true), 0);
     for n in 0..100 {
         assert_eq!(min_int(|x| x >= n), n);
     }
@@ -75,7 +75,7 @@ fn approx_pi(scale: u32) {
     let area = n * n;
     let mut lower = 0;
     let mut higher = 0;
-    let f = |i: usize| { n * n - i * i };
+    let f = |i: usize| n * n - i * i;
     for i in 0..n {
         higher += ceil_sqrt(f(i));
         lower += floor_sqrt(f(i + 1));
@@ -96,7 +96,7 @@ fn approx_pi(scale: u32) {
 
 fn main() {
     if cfg!(debug_assertions) {
-        println!("*** Warning: slow in debug mode ***")
+        println!("*** Warning: slow in debug mode. Try cargo run --release ***")
     }
     for i in 0..8 {
         approx_pi(i);
