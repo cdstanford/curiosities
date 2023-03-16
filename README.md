@@ -1,6 +1,6 @@
 # curiosities
 
-This repository contains short programs and investigations into curious problems.
+This repository contains solutions to curious programming problems and logic puzzles.
 
 It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/pytudes).
 
@@ -8,8 +8,7 @@ It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/p
 
 - Python 3
 - Rust
-- [Z3 Theorem prover](https://github.com/Z3Prover/z3) (`pip3 install 
-z3-solver`)
+- [Z3 Theorem prover](https://github.com/Z3Prover/z3) (`pip3 install z3-solver`)
 - Coq
 - [Alloy](https://alloytools.org/)
 
@@ -18,5 +17,3 @@ z3-solver`)
 Author: Caleb Stanford
 
 License: MIT
-
-Project Start: 2020-06-06
