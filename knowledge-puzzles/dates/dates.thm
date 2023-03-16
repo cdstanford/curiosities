@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<alloy>
+
+<view nodetheme="Standard" useOriginalAtomNames="yes">
+
+<projection> <type name="Person"/> </projection>
+
+<defaultnode/>
+
+<defaultedge/>
+
+<node>
+   <type name="A"/>
+   <type name="B"/>
+   <type name="Int"/>
+   <type name="Person"/>
+   <type name="String"/>
+   <type name="univ"/>
+   <type name="seq/Int"/>
+   <set name="$knows_bd_w1" type="World"/>
+   <set name="$knows_bd_w2" type="World"/>
+</node>
+
+<node color="Green">
+   <type name="RealWorld"/>
+</node>
+
+<node shape="Circle" color="Yellow">
+   <type name="World"/>
+</node>
+
+<edge visible="no" constraint="no">
+   <relation name="$knows_bd_w1&apos;"> <type name="World"/> <type name="World"/> </relation>
+   <relation name="$knows_bd_w2&apos;"> <type name="World"/> <type name="World"/> </relation>
+</edge>
+
+<edge visible="no" merge="no" layout="no" attribute="yes" constraint="no">
+   <relation name="day"> <type name="World"/> <type name="Int"/> </relation>
+   <relation name="month"> <type name="World"/> <type name="Int"/> </relation>
+</edge>
+
+</view>
+
+</alloy>

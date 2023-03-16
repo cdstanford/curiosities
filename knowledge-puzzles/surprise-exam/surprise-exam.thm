@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<alloy>
+
+<view>
+
+<projection> <type name="Time"/> </projection>
+
+<defaultnode/>
+
+<defaultedge/>
+
+<node>
+   <type name="Int"/>
+   <type name="String"/>
+   <type name="Time"/>
+   <type name="univ"/>
+   <type name="seq/Int"/>
+   <type name="time/Ord"/>
+   <set name="First" type="time/Ord"/>
+   <set name="Next" type="time/Ord"/>
+</node>
+
+<node color="Green">
+   <type name="RealWorld"/>
+</node>
+
+<node color="Red">
+   <set name="exam_day" type="World"/>
+</node>
+
+<node showlabel="no">
+   <set name="$knows_exam_day_w&apos;" type="World"/>
+</node>
+
+<node visible="yes" shape="Circle">
+   <type name="World"/>
+</node>
+
+</view>
+
+</alloy>

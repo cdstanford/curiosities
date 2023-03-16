@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<alloy>
+
+<view useOriginalAtomNames="yes">
+
+<projection> <type name="Time"/> </projection>
+
+<defaultnode/>
+
+<defaultedge/>
+
+<node>
+   <type name="Blue"/>
+   <type name="Brown"/>
+   <type name="Int"/>
+   <type name="String"/>
+   <type name="Time"/>
+   <type name="univ"/>
+   <type name="seq/Int"/>
+   <type name="time/Ord"/>
+   <set name="First" type="time/Ord"/>
+   <set name="Next" type="time/Ord"/>
+</node>
+
+<node color="Green">
+   <type name="RealWorld"/>
+</node>
+
+<node showlabel="no" color="Blue">
+   <set name="domain" type="World"/>
+</node>
+
+<node visible="no" numberatoms="no">
+   <type name="Color"/>
+</node>
+
+<node visible="yes">
+   <type name="Person"/>
+</node>
+
+<node visible="yes" shape="Ellipse" color="Red">
+   <type name="World"/>
+</node>
+
+<node visible="yes" showinattr="yes">
+   <set name="revealed_eyes" type="Person"/>
+</node>
+
+<edge visible="no">
+   <relation name="access"> <type name="World"/> <type name="Person"/> <type name="World"/> </relation>
+</edge>
+
+<edge visible="no" attribute="yes">
+   <relation name="eyes"> <type name="World"/> <type name="Person"/> <type name="Color"/> </relation>
+</edge>
+
+</view>
+
+</alloy>
