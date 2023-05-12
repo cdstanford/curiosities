@@ -11,7 +11,7 @@ https://oeis.org/A066062
 
 import z3
 
-# generic model counting methods
+# Generic model counting methods
 # see https://theory.stanford.edu/~nikolaj/programmingz3.html#sec-blocking-evaluations
 
 def block_model(s, vars):
@@ -23,13 +23,13 @@ def iter_models(s, vars):
        yield s.model()
        block_model(s, vars)
 
+def print_model(m, vars):
+    print([t for t in vars if m.eval(t, model_completion=True)])
+
 # Solution to the present problem
 
 def covers(n, vars):
     return z3.Or([z3.And(vars[i], vars[n-i]) for i in range(n+1)])
-
-def print_model(m, vars):
-    print([t for t in vars if m.eval(t, model_completion=True)])
 
 def solve(N):
     print(f"=== {N} ===")
