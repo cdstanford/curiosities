@@ -110,6 +110,22 @@ mod tests {
         }
     }
 
+    // v2 is off for some values, but still valid for 0 to 100 with
+    // only a few exceptions
+    // For the exceptions, it is only off by a degree
+    const EXCEPTIONS: &[isize] = &[4, 13, 51, 60, 69, 71, 78, 80, 87, 89, 91, 96, 98, 100];
+    #[test]
+    fn test_f_to_c_v2() {
+        for f in 0..=100 {
+            if EXCEPTIONS.contains(&f) {
+                assert!(fast_f_to_c_v2(f) - true_f_to_c(f) >= -1);
+                assert!(fast_f_to_c_v2(f) - true_f_to_c(f) <= 1);
+            } else {
+                assert_eq!(fast_f_to_c_v2(f), true_f_to_c(f), "failed for {}F", f);
+            }
+        }
+    }
+
     #[test]
     fn test_c_to_f() {
         for c in MIN_C..=MAX_C {
