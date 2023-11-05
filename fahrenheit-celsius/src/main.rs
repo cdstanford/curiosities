@@ -58,7 +58,7 @@ pub fn fast_f_to_c_v3(f: isize) -> isize {
     // Calculate the carry digit
     let carry = match (f - 32) % 2 {
         1 => d1 + d2 + 5,
-        0 => d1 + d2 + 0,
+        0 => d1 + d2,
         -1 => d1 + d2 - 5,
         _ => unreachable!(),
     };
@@ -68,6 +68,9 @@ pub fn fast_f_to_c_v3(f: isize) -> isize {
         -4..=4 => 0,
         5..=13 => 1,
         14..=22 => 2,
+        // Other rare cases
+        ..=-23 => -3, // e.g. -161F
+        23.. => 3,    // e.g. 231F
         _ => unreachable!(),
     };
 
@@ -125,10 +128,10 @@ mod tests {
         test_eq(-40, -40);
     }
 
-    const MIN_F: isize = -40;
-    const MAX_F: isize = 212;
-    const MIN_C: isize = -40;
-    const MAX_C: isize = 100;
+    const MIN_F: isize = -200;
+    const MAX_F: isize = 300;
+    const MIN_C: isize = -130;
+    const MAX_C: isize = 150;
 
     #[test]
     fn test_f_to_c_v1() {
