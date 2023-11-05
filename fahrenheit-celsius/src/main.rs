@@ -41,10 +41,37 @@ pub fn fast_f_to_c_v1(f: isize) -> isize {
 }
 
 // Version without the additional shifting
+// This usually works, but is off by one for some values
 pub fn fast_f_to_c_v2(f: isize) -> isize {
     let x = (f - 32) as f64 / 2.0;
     let dec1 = x / 10.0;
     round_to_int(x + dec1)
+}
+
+// Version that corrects for one-off errors in v2
+pub fn fast_f_to_c_v3(f: isize) -> isize {
+    let x = (f - 32) / 2;
+
+    let d1 = x / 10;
+    let d2 = x % 10;
+
+    // Calculate the carry digit
+    let carry = match (f - 32) % 2 {
+        1 => d1 + d2 + 5,
+        0 => d1 + d2 + 0,
+        -1 => d1 + d2 - 5,
+        _ => unreachable!(),
+    };
+    let round = match carry {
+        -22..=-14 => -2,
+        -13..=-5 => -1,
+        -4..=4 => 0,
+        5..=13 => 1,
+        14..=22 => 2,
+        _ => unreachable!(),
+    };
+
+    x + d1 + round
 }
 
 /*
@@ -126,6 +153,14 @@ mod tests {
         }
     }
 
+    // v3 fixes these problems
+    #[test]
+    fn test_f_to_c_v3() {
+        for f in MIN_F..=MAX_F {
+            assert_eq!(fast_f_to_c_v3(f), true_f_to_c(f), "failed for {}F", f);
+        }
+    }
+
     #[test]
     fn test_c_to_f() {
         for c in MIN_C..=MAX_C {
@@ -142,7 +177,7 @@ fn main() {
     println!(
         "{}F -> {}C    (true value: {}C)",
         f,
-        fast_f_to_c_v2(f),
+        fast_f_to_c_v3(f),
         true_f_to_c(f)
     );
 
