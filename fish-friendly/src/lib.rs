@@ -61,16 +61,21 @@ impl Grid {
         Self { rows, cols, grid }
     }
 
+    pub fn new_empty(rows: usize, cols: usize) -> Self {
+        let grid = vec![vec![false; cols + 2]; rows + 2];
+        Self { rows, cols, grid }
+    }
+
     pub fn cell(&self, i: usize, j: usize) -> bool {
         self.grid[i][j]
     }
 
-    pub fn is_sink(&self, _i: usize, j: usize) -> bool {
-        j == self.cols
-    }
-
     pub fn sources(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
         (1..=self.rows).map(|i| (i, 1)).filter(|&(i, j)| self.cell(i, j))
+    }
+
+    pub fn is_sink(&self, _i: usize, j: usize) -> bool {
+        j == self.cols
     }
 
     pub fn adjacencies(
@@ -92,5 +97,21 @@ impl Grid {
             |&(i, j)| self.adjacencies(i, j),
             |&(i, j)| self.is_sink(i, j),
         )
+    }
+
+    // Methods to iterate over all grids
+    // return false in case of overflow
+
+    fn rotate_cell(&mut self, i: usize, j: usize) -> bool {
+        self.grid[i][j] = !self.grid[i][j];
+        self.grid[i][j]
+    }
+
+    fn rotate_row(&mut self, i: usize) -> bool {
+        (1..=self.cols).any(|j| self.rotate_cell(i, j))
+    }
+
+    pub fn rotate(&mut self) -> bool {
+        (1..=self.rows).any(|i| self.rotate_row(i))
     }
 }
