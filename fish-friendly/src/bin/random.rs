@@ -3,7 +3,7 @@
     the probability
 */
 
-use fish_friendly::{Grid, COLS, ROWS};
+use fish_friendly::Grid;
 
 use std::io::{self, Write};
 
@@ -12,6 +12,9 @@ const NUM_ITERS: usize = 1000000;
 // Number of steps to display progress
 // (Should be a divisor of NUM_ITERS)
 const PROGRESS_STEP: usize = 100000;
+
+const ROWS: usize = 10;
+const COLS: usize = 10;
 
 fn main() {
     println!("Running {} iterations for {} x {} grids", NUM_ITERS, ROWS, COLS);
@@ -26,7 +29,7 @@ fn main() {
 
         let mut new_friendly: usize = 0;
         for _ in 0..PROGRESS_STEP {
-            let grid = Grid::new_random();
+            let grid = Grid::new_random(ROWS, COLS);
             if grid.fish_friendly() {
                 new_friendly += 1;
             }

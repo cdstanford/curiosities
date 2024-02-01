@@ -8,16 +8,6 @@ use std::hash::Hash;
 use std::iter;
 
 /*
-    Compile-time constants
-*/
-// Dimensions of the grid
-// The padded grid contains one additional initial and final row/col
-pub const ROWS: usize = 10;
-pub const COLS: usize = 10;
-const PAD_ROWS: usize = ROWS + 2;
-const PAD_COLS: usize = COLS + 2;
-
-/*
     Generic depth-first search
 */
 pub fn dfs<T, Src, Succ, Succs, Snk>(
@@ -52,30 +42,37 @@ where
 /*
     Grid struct
 */
-pub struct Grid([[bool; PAD_COLS]; PAD_ROWS]);
+pub struct Grid {
+    rows: usize,
+    cols: usize,
+    grid: Vec<Vec<bool>>,
+}
+
 impl Grid {
     #[allow(clippy::needless_range_loop)]
-    pub fn new_random() -> Self {
+    pub fn new_random(rows: usize, cols: usize) -> Self {
         let mut rng = rand::thread_rng();
-        let mut grid = [[false; PAD_COLS]; PAD_ROWS];
-        for row in 1..=ROWS {
-            for col in 1..=COLS {
+        let mut grid = vec![vec![false; cols + 2]; rows + 2];
+        for row in 1..=rows {
+            for col in 1..=cols {
                 grid[row][col] = rng.gen();
             }
         }
-        Self(grid)
+        Self { rows, cols, grid }
     }
 
     pub fn cell(&self, i: usize, j: usize) -> bool {
-        self.0[i][j]
+        self.grid[i][j]
     }
 
     pub fn is_sink(&self, _i: usize, j: usize) -> bool {
-        j == COLS
+        j == self.cols
     }
+
     pub fn sources(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
-        (1..=ROWS).map(|i| (i, 1)).filter(|&(i, j)| self.cell(i, j))
+        (1..=self.rows).map(|i| (i, 1)).filter(|&(i, j)| self.cell(i, j))
     }
+
     pub fn adjacencies(
         &self,
         i: usize,
