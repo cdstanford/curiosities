@@ -116,7 +116,7 @@ impl Grid {
     }
 }
 
-const PROGRESS_STEPS: u128 = 1000;
+const PROGRESS_STEPS: u128 = 10;
 
 pub fn count_friendly_grids(rows: usize, cols: usize) -> (u128, u128) {
     let expect_total: u128 = 2_u128

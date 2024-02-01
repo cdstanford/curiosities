@@ -16,6 +16,7 @@ struct Args {
     cols_upto: usize,
 }
 
+#[allow(clippy::needless_range_loop)]
 pub fn main() {
     let args = Args::parse();
 
