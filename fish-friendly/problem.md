@@ -9,4 +9,6 @@ How many fish-friendly $m \times n$ grids are there?
 
 [2022 Utah Math Olympiad Problem 6](https://utahmath.org/doc/2022UtahMathOlympiad.pdf)
 
+[OEIS sequence A359576](https://oeis.org/A359576)
+
 [OEIS sequence A365988](https://oeis.org/A365988)
