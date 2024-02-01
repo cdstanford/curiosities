@@ -1,6 +1,5 @@
 /*
-    Binary to randomly generate grids & estimate
-    the probability
+    Binary to randomly generate grids & estimate the probability
 */
 
 use fish_friendly::Grid;
@@ -18,7 +17,12 @@ struct Args {
     rows: usize,
     #[arg(help = "Number of columns")]
     cols: usize,
-    #[arg(short, long, help = "Number of iterations", default_value = "1000000")]
+    #[arg(
+        short,
+        long,
+        help = "Number of iterations",
+        default_value = "1000000"
+    )]
     num_iters: usize,
 }
 
@@ -26,12 +30,18 @@ fn main() {
     let args = Args::parse();
 
     if args.num_iters % PROGRESS_STEPS != 0 {
-        eprintln!("The number of iterations should be a multiple of {}", PROGRESS_STEPS);
+        eprintln!(
+            "The number of iterations should be a multiple of {}",
+            PROGRESS_STEPS
+        );
         std::process::exit(1);
     }
     let progress_step = args.num_iters / 10;
 
-    println!("Running {} iterations for {} x {} grids", args.num_iters, args.rows, args.cols);
+    println!(
+        "Running {} iterations for {} x {} grids",
+        args.num_iters, args.rows, args.cols
+    );
     let mut friendly: usize = 0;
     for epoch in 0..(args.num_iters / progress_step) {
         print!(
