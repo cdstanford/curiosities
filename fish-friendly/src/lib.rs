@@ -115,3 +115,34 @@ impl Grid {
         (1..=self.rows).any(|i| self.rotate_row(i))
     }
 }
+
+const PROGRESS_STEPS: u128 = 1000;
+
+pub fn count_friendly_grids(rows: usize, cols: usize) -> (u128, u128) {
+    let expect_total: u128 = 2_u128
+        .checked_pow((rows * cols) as u32)
+        .expect("The number of grids is too large to fit in a u128");
+    let progress_step = expect_total / PROGRESS_STEPS;
+
+    let mut total: u128 = 0;
+    let mut friendly: u128 = 0;
+    let mut grid = Grid::new_empty(rows, cols);
+    loop {
+        if grid.fish_friendly() {
+            friendly += 1;
+        }
+        total += 1;
+        if progress_step > 0 && total % progress_step == 0 {
+            println!(
+                "Progress: {:.0}%",
+                (total as f64) * 100.0 / (expect_total as f64)
+            );
+        }
+        if !grid.rotate() {
+            break;
+        }
+    }
+    debug_assert_eq!(total, expect_total);
+
+    (friendly, total)
+}
