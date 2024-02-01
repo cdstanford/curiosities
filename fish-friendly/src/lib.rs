@@ -85,7 +85,7 @@ impl Grid {
     ) -> impl Iterator<Item = (usize, usize)> + '_ {
         iter::once((i - 1, j))
             .chain(iter::once((i + 1, j)))
-            .chain(iter::once((i, j - 1)))
+            .chain(iter::once((i, j - 1))) // note: remove this line to prevent "backwards" steps
             .chain(iter::once((i, j + 1)))
             .filter(|&(r, c)| self.cell(r, c))
     }
