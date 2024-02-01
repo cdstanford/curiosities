@@ -88,6 +88,34 @@ pub fn fast_c_to_f(c: isize) -> isize {
 }
 
 /*
+    Entrypoint
+*/
+
+fn main() {
+    println!("Enter a temperature in Fahrenheit:");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+    let f: isize = input.trim().parse().unwrap();
+    println!(
+        "{}F -> {}C    (true value: {}C)",
+        f,
+        fast_f_to_c_v3(f),
+        true_f_to_c(f)
+    );
+
+    println!("Enter a temperature in Celsius:");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+    let c: isize = input.trim().parse().unwrap();
+    println!(
+        "{}C -> {}F    (true value: {}F)",
+        c,
+        fast_c_to_f(c),
+        true_c_to_f(c)
+    );
+}
+
+/*
     Tests
 
     The heuristic works for temperatures from -40 to 212 F
@@ -170,28 +198,4 @@ mod tests {
             assert_eq!(fast_c_to_f(c), true_c_to_f(c), "failed for {}C", c);
         }
     }
-}
-
-fn main() {
-    println!("Enter a temperature in Fahrenheit:");
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
-    let f: isize = input.trim().parse().unwrap();
-    println!(
-        "{}F -> {}C    (true value: {}C)",
-        f,
-        fast_f_to_c_v3(f),
-        true_f_to_c(f)
-    );
-
-    println!("Enter a temperature in Celsius:");
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
-    let c: isize = input.trim().parse().unwrap();
-    println!(
-        "{}C -> {}F    (true value: {}F)",
-        c,
-        fast_c_to_f(c),
-        true_c_to_f(c)
-    );
 }
