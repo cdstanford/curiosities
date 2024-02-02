@@ -18,10 +18,8 @@ struct Args {
 pub fn main() {
     let Args { upto } = Args::parse();
 
-    let mut friendly_table =
-        vec![vec![None; upto]; upto];
-    let mut total_table =
-        vec![vec![None; upto]; upto];
+    let mut friendly_table = vec![vec![None; upto]; upto];
+    let mut total_table = vec![vec![None; upto]; upto];
     for size in 1..upto {
         for rows in 1..size {
             let cols = size - rows;
@@ -36,7 +34,9 @@ pub fn main() {
     println!("Friendly:");
     for row in 1..upto {
         for col in 1..upto {
-            let s = friendly_table[row][col].map(|x| format!("{:10}", x)).unwrap_or("".to_string());
+            let s = friendly_table[row][col]
+                .map(|x| format!("{:10}", x))
+                .unwrap_or("".to_string());
             print!("{}", s);
         }
         println!();
@@ -56,7 +56,9 @@ pub fn main() {
     println!("Total:");
     for row in 1..upto {
         for col in 1..upto {
-            let s = total_table[row][col].map(|x| format!("{:10}", x)).unwrap_or("".to_string());
+            let s = total_table[row][col]
+                .map(|x| format!("{:10}", x))
+                .unwrap_or("".to_string());
             print!("{}", s);
         }
         println!();
