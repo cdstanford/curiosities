@@ -41,6 +41,18 @@ pub fn main() {
         }
         println!();
     }
+
+    let mut results = vec![];
+    for size in 1..upto {
+        for cols in 1..size {
+            let rows = size - cols;
+            if let Some(x) = friendly_table[rows][cols] {
+                results.push(x);
+            }
+        }
+    }
+    println!("Read by antidiagonals: {:?}", results);
+
     println!("Total:");
     for row in 1..upto {
         for col in 1..upto {
