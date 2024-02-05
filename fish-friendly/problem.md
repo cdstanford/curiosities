@@ -5,6 +5,10 @@ The grid is called *fish-friendly* if a fish can swim from from the left to the 
 
 How many fish-friendly $m \times n$ grids are there?
 
+## Alternate version
+
+For an alternate version of this problem, we can disallow right-to-left steps. For this version, comment out line 88 in `src/lib.rs`.
+
 ## References
 
 [2022 Utah Math Olympiad Problem 6](https://utahmath.org/doc/2022UtahMathOlympiad.pdf)
