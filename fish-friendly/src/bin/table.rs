@@ -53,14 +53,14 @@ pub fn main() {
     }
     println!("Read by antidiagonals: {:?}", results);
 
-    println!("Total:");
-    for row in 1..upto {
-        for col in 1..upto {
-            let s = total_table[row][col]
-                .map(|x| format!("{:10}", x))
-                .unwrap_or("".to_string());
-            print!("{}", s);
-        }
-        println!();
-    }
+    // println!("Total:");
+    // for row in 1..upto {
+    //     for col in 1..upto {
+    //         let s = total_table[row][col]
+    //             .map(|x| format!("{:10}", x))
+    //             .unwrap_or("".to_string());
+    //         print!("{}", s);
+    //     }
+    //     println!();
+    // }
 }

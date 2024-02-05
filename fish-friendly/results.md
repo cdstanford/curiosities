@@ -17,6 +17,11 @@ Friendly:
 Read by antidiagonals: [1, 3, 1, 7, 7, 1, 15, 37, 17, 1, 31, 175, 197, 41, 1, 63, 781, 1985, 1041, 99, 1, 127, 3367, 18621, 22193, 5503, 239, 1, 255, 14197, 167337, 433809, 247759, 29089, 577, 1, 511, 58975, 1461797, 8057905, 10056959, 2764991, 153769, 1393, 1, 1023, 242461, 12519345, 144769425, 384479935, 232824241, 30856705, 812849, 3363, 1]
 ```
 
+Time:
+```
+cargo run --release --bin table 12  1428.24s user 3.11s system 28% cpu 1:23:05.38 total
+```
+
 ## Results for modified problem that disallows right-to-left steps
 
 Notice that these results are quite similar, the smallest entry that differs is for 5x4 grids (433801 friendly instead of 433809).
@@ -36,4 +41,9 @@ Friendly:
       1023
 
 Read by antidiagonals: [1, 3, 1, 7, 7, 1, 15, 37, 17, 1, 31, 175, 197, 41, 1, 63, 781, 1985, 1041, 99, 1, 127, 3367, 18621, 22193, 5503, 239, 1, 255, 14197, 167337, 433801, 247759, 29089, 577, 1, 511, 58975, 1461797, 8057625, 10056087, 2764991, 153769, 1393, 1, 1023, 242461, 12519345, 144762849, 384409519, 232777209, 30856705, 812849, 3363, 1]
+```
+
+Time:
+```
+cargo run --release --bin table 12  1347.99s user 3.37s system 50% cpu 44:15.64 total
 ```
