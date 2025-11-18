@@ -10,3 +10,5 @@ But this implies d <= c, contradiction.
 
 For N = 6, the following set of weights works (and is probably the simplest):
 [3, 4, 5, 6, 7, 8].
+
+No solution exists for integer weights at most 7.

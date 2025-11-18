@@ -1,14 +1,39 @@
 ========== Number of weights: 1 ==========
+Integer weights:
+Result: sat
+Model: [w0 = 1]
+Real weights:
 Result: sat
 Model: [w0 = 1]
 ========== Number of weights: 2 ==========
+Integer weights:
+Result: unsat
+Real weights:
 Result: unsat
 ========== Number of weights: 3 ==========
+Integer weights:
+Result: unsat
+Real weights:
 Result: unsat
 ========== Number of weights: 4 ==========
+Integer weights:
+Result: unsat
+Real weights:
 Result: unsat
 ========== Number of weights: 5 ==========
+Integer weights:
+Result: unsat
+Real weights:
 Result: unsat
 ========== Number of weights: 6 ==========
+Integer weights:
 Result: sat
-Model: [w3 = 6, w2 = 4, w5 = 5, w4 = 7, w0 = 3, w1 = 8]
+Model: [w0 = 4, w1 = 6, w2 = 2, w3 = 7, w5 = 5, w4 = 8]
+Real weights:
+Result: sat
+Model: [w5 = 1/4,
+ w4 = 5/32,
+ w0 = 1/8,
+ w1 = 3/16,
+ w3 = 1/16,
+ w2 = 7/32]

@@ -18,10 +18,17 @@ def powerset(iterable):
 
 """
 Solve the problem for a set of N weights.
+
+If use_reals is set, use real weights; else use integers
 """
-def solve_weights_problem(N):
+def solve_weights_problem(N, use_reals):
     solver = z3.Solver()
-    weights = [z3.Int("w" + str(i)) for i in range(N)]
+
+    if use_reals:
+        weights = [z3.Real("w" + str(i)) for i in range(N)]
+    else:
+        weights = [z3.Int("w" + str(i)) for i in range(N)]
+
     for i in range(N):
         # Weights positive
         solver.add(weights[i] > 0)
@@ -37,20 +44,35 @@ def solve_weights_problem(N):
     ## Uncomment to print assertions
     # print(f"Constraints: {solver.assertions()}")
     result = str(solver.check())
-    print(f"Result: {result}")
+    print(f"    Result: {result}")
     if result == 'sat':
-        print(f"Model: {solver.model()}")
+        print(f"    Model: {solver.model()}")
     return result
 
 """
 Solve the overall problem: try with successively higher numbers of weights.
 """
-results = { "sat": [], "unsat": [], "unknown": [] }
-for N in range(1, 7):
+
+TRY_UPTO = 6
+
+results_int = { "sat": [], "unsat": [], "unknown": [] }
+results_real = { "sat": [], "unsat": [], "unknown": [] }
+for N in range(1, TRY_UPTO + 1):
     print(f"========== Number of weights: {N} ==========")
-    result = solve_weights_problem(N)
-    results[result].append(N)
+
+    print("Integer weights: ")
+    result_int = solve_weights_problem(N, False)
+    print("Real weights: ")
+    result_real = solve_weights_problem(N, True)
+
+    results_int[result_int].append(N)
+    results_real[result_real].append(N)
+
 ## Uncomment for summary
 # print("========== Summary ==========")
-# for key, value in results.items():
-#     print(f"{key}: {value}")
+# print("Integer weights: ")
+# for key, value in results_int.items():
+#     print(f"    {key}: {value}")
+# print("Real weights: ")
+# for key, value in results_real.items():
+#     print(f"    {key}: {value}")
