@@ -2,7 +2,8 @@
 What is the minimum number of moves required in chess to move all pieces up one square?
 
 see
-https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Faemmq2pzk5dg1.png
+    chess-moves.png
+    From: https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Faemmq2pzk5dg1.png
 
 This program does not terminate within a few minutes.
 It gets up to around n == 11 before diverging.
