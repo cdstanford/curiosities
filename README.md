@@ -1,8 +1,9 @@
 # curiosities
 
-This repository contains solutions to curious programming problems and logic puzzles.
+This repository contains solutions to curious programming problems and logic puzzles,
+often (but not always) using Z3.
 
-It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/pytudes).
+Inspired by Peter Norvig's [pytudes](https://github.com/norvig/pytudes).
 
 ### Languages and dependencies
 
@@ -11,8 +12,8 @@ It is partially inspired by Peter Norvig's [pytudes](https://github.com/norvig/p
 - [Alloy](https://alloytools.org/)
 - Coq
 
-### Basic Information
+### Basic information
 
 Author: Caleb Stanford
-
 License: MIT
+Copyright: 2026
