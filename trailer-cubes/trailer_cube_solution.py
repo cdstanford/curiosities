@@ -246,8 +246,8 @@ pretty_print_solution(gravity_spec, total_cubes == 31)
 
 # minimum is 21 - assuming no gravity
 print("=== No gravity ===")
-# (Takes 1-2 minutes to run!)
 print("Without gravity, total cubes < 21:")
+print("(Note: takes about 2 minutes...)")
 pretty_print_solution(base_spec, total_cubes < 21)
 print("Without gravity, total cubes = 21:")
 pretty_print_solution(base_spec, total_cubes == 21)
@@ -263,11 +263,11 @@ pretty_print_solution(flat_gravity_spec, total_cubes == 35)
 
 # minimum is 23 - with glue
 print("=== Glue ===")
-# (Takes about 30s to run!)
 print("Gravity with glue, total cubes = 23:")
+print("(Note: takes up to 30 seconds...)")
 pretty_print_solution(glue_spec, total_cubes == 23)
-# (Takes several minutes to run!)
 print("Gravity with glue, total cubes < 23:")
+print("(Note: takes about 4 minutes...)")
 pretty_print_solution(glue_spec, total_cubes < 23)
 
 """
