@@ -19,3 +19,7 @@ b = 7: no solution found (tried up to 25 digits)
 https://oeis.org/A258107
 
 "As with A146025, it is a plausible conjecture that there are no more terms, but this has not been proved." - Daniel Mondot, Dec 16 2016
+
+### Thanks
+
+Thanks to my brother [Edward Stanford](https://github.com/EdwardStanford7/) for pointing me to this problem.
