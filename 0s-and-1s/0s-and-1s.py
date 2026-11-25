@@ -11,7 +11,7 @@ b = 5: ?
 import z3
 
 # max # of digits
-D_MAX = 25
+D_MAX = 30
 
 def smallest_base(b):
     # d = num digits in base 2
@@ -52,7 +52,11 @@ def smallest_base(b):
         result = solver.check()
         if result == z3.sat:
             # Now, find minimum solution
+            first = True
             while result == z3.sat:
+                if not first:
+                    print(f"(b = {b}: Minimizing...)")
+                first = False
                 model = solver.model()
                 n_sol = model[n]
                 solver.add(n < n_sol)

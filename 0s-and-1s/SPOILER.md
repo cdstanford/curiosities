@@ -2,12 +2,13 @@
 
 ```
 $ python3 0s-and-1s.py
+(b = 2: Minimizing...)
 b = 2: solution n = 2
 b = 3: solution n = 3
 b = 4: solution n = 4
 b = 5: solution n = 82000
-b = 6: no solution found (tried up to 25 digits)
-b = 7: no solution found (tried up to 25 digits)
+b = 6: no solution found (tried up to 30 digits)
+b = 7: no solution found (tried up to 30 digits)
 ```
 
 ### OEIS
