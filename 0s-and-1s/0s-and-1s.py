@@ -11,7 +11,7 @@ b = 5: ?
 import z3
 
 # max # of digits
-D_MAX = 100
+D_MAX = 25
 
 def smallest_base(b):
     # d = num digits in base 2
@@ -63,10 +63,13 @@ def smallest_base(b):
             print(f"b = {b}: solution n = {n_sol}")
             return
         elif result == z3.unknown:
-            print(f"b = {b}: UNKNOWN (got up to {d} digits)")
+            print(f"b = {b}: UNKNOWN (tried up to {d} digits)")
             return
 
-B_MAX = 10
+    print(f"b = {b}: no solution found (tried up to {D_MAX} digits)")
+
+
+B_MAX = 7
 
 for b in range(2, B_MAX + 1):
     smallest_base(b)
